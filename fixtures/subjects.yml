@@ -1,0 +1,9 @@
+---
+- id: 1
+  name: subject1
+  description: a subject description
+  default_text: default text
+- id: 2
+  name: subject2
+  description: subject2 description
+  default_text: default text

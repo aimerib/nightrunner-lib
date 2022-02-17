@@ -1,0 +1,9 @@
+---
+- id: 1
+  name: item1
+  description: item 1 description
+  can_pick: false
+- id: 2
+  name: item2
+  description: item 2 description
+  can_pick: true

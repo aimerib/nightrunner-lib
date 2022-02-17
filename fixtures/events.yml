@@ -1,0 +1,85 @@
+---
+- id: 1
+  name: text
+  description: text
+  location: 1
+  destination: ~
+  narrative: 1
+  required_verb: 2
+  required_subject: 1
+  required_item: ~
+  completed: false
+  add_item: ~
+  remove_old_narrative: false
+  remove_item: ~
+  required_events: []
+- id: 2
+  name: event 2
+  description: hug subject 2 - requires event 4
+  location: 1
+  destination: ~
+  narrative: 3
+  required_verb: 9
+  required_subject: 1
+  required_item: ~
+  completed: false
+  add_item: ~
+  remove_old_narrative: true
+  remove_item: ~
+  required_events: [4]
+- id: 3
+  name: text
+  description: text
+  location: 1
+  destination: ~
+  narrative: 2
+  required_verb: 2
+  required_subject: 1
+  required_item: ~
+  completed: false
+  add_item: ~
+  remove_old_narrative: true
+  remove_item: ~
+  required_events: [2]
+- id: 4
+  name: event 4
+  description: talk to subject 1
+  location: 1
+  destination: ~
+  narrative: 1
+  required_verb: 8
+  required_subject: 1
+  required_item: ~
+  completed: false
+  add_item: ~
+  remove_old_narrative: true
+  remove_item: ~
+  required_events: []
+- id: 5
+  name: event 5
+  description: gives item 2 to player when talking to subject2
+  location: 2
+  destination: 1
+  narrative: 4
+  required_verb: 8
+  required_subject: 2
+  required_item: ~
+  completed: false
+  add_item: 2
+  remove_old_narrative: false
+  remove_item: ~
+  required_events: []
+- id: 6
+  name: event 6
+  description: gives item 2 to subject1 when talking to subject1 after event 5
+  location: 1
+  destination: ~
+  narrative: 4
+  required_verb: 7
+  required_subject: 1
+  required_item: 2
+  completed: false
+  add_item: ~
+  remove_old_narrative: false
+  remove_item: 2
+  required_events: [5]

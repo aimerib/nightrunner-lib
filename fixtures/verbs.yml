@@ -1,0 +1,51 @@
+---
+- id: 1
+  names:
+    - quit
+    - ":q"
+    - q
+  verb_function: quit
+- id: 2
+  names:
+    - help
+  verb_function: help
+- id: 3
+  names:
+    - look
+    - stare
+  verb_function: look
+- id: 4
+  names:
+    - inventory
+    - i
+  verb_function: inventory
+- id: 5
+  names:
+    - pick
+    - take
+    - grab
+    - pi
+    - tk
+    - gr
+    - get
+    - g
+  verb_function: take
+- id: 6
+  names:
+    - drop
+    - place
+  verb_function: drop
+- id: 7
+  names:
+    - give
+    - hand
+  verb_function: normal
+- id: 8
+  names:
+    - talk
+    - chat
+  verb_function: talk
+- id: 9
+  names:
+    - hug
+  verb_function: normal

@@ -1,0 +1,16 @@
+---
+- id: 1
+  text: text
+  description: text
+- id: 2
+  text: "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}."
+  description: text
+- id: 3
+  text: "this narrative should replace the old one."
+  description: "a replaced narrative"
+- id: 4
+  text: "this narrative should be returned along with the text of room 1."
+  description: "a narrative that is added to the room narrative"
+- id: 5
+  text: "this narrative should be returned along with the text of room 1 when completing event 6."
+  description: "a narrative that is added to the room narrative"
