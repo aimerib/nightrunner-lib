@@ -276,6 +276,8 @@ use util::parse_room_text;
 pub mod config;
 pub mod parser;
 pub mod util;
+extern crate wasm_bindgen;
+use wasm_bindgen::prelude::*;
 
 pub type NRResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -283,8 +285,8 @@ pub type NRResult<T> = Result<T, Box<dyn std::error::Error>>;
 /// and represents the game. It holds the state
 /// internally and passes it to the parser for
 /// processing along with the provided input.
+#[wasm_bindgen]
 #[derive(Debug, PartialEq)]
-
 pub struct NightRunner {
     state: Rc<RefCell<State>>,
 }
@@ -536,6 +538,7 @@ pub struct NightRunner {
 /// let nr1 = NightRunnerBuilder::new().with_json_data(data);
 /// let nr2 = NightRunnerBuilder::new().with_path_for_config(path_to_yaml);
 /// ```
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct NightRunnerBuilder {
     config: Config,
@@ -570,6 +573,7 @@ impl NightRunnerBuilder {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NightRunner {
     /// This is the main function that executes the game. Pass
     /// the input string to this function and it will return
@@ -625,5 +629,66 @@ impl NightRunner {
             None,
         )?;
         Ok(event_message)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+impl NightRunner {
+    #[wasm_bindgen(constructor)]
+    pub fn new(config: &str) -> NightRunner {
+        let config = Config::from_json(config);
+        let state = State::init(config);
+        NightRunner { state }
+    }
+    /// This is the main function that executes the game. Pass
+    /// the input string to this function and it will return
+    /// a result that can be used on the front-end to display
+    /// the game to the user.
+    /// Unlike the `parse_input` function, this function will
+    /// return the result in JSON format. This is useful for
+    /// front-ends that can't integrate with a rust library.
+    pub fn parse(&self, input: &str) -> String {
+        let result = parser::parse(self.state.clone(), input);
+        let json = match result {
+            Ok(ok) => format!("{{\"ok\":{}}}", serde_json::to_string(&ok).unwrap()),
+            Err(err) => format!(
+                "{{\"error\":{}}}",
+                serde_json::to_string(&err.to_string()).unwrap()
+            ),
+        };
+        json
+    }
+    /// Returns the string with the game intro text. This can
+    /// be used to display the game intro to the user, but isn't
+    /// required.
+    #[wasm_bindgen]
+    pub fn game_intro(&self) -> String {
+        self.state.borrow().config.intro.clone()
+    }
+    /// Returns the text for the very first room of the game.
+    ///
+    /// Since there is no input to parse when the game starts,
+    /// this function should be used to retrieve that text instead.
+    pub fn first_room_text(&self) -> Result<JsValue, JsError> {
+        let narrative_id = self.state.borrow().rooms[0].narrative.clone();
+        let narrative_text = self
+            .state
+            .borrow()
+            .config
+            .narratives
+            .iter()
+            .find(|n| n.id == narrative_id)
+            .unwrap()
+            .text
+            .clone();
+        let event_message = parse_room_text(
+            self.state.borrow().clone(),
+            narrative_text,
+            "".to_string(),
+            None,
+        )
+        .unwrap();
+        Ok(JsValue::from_serde(&event_message).unwrap())
     }
 }
