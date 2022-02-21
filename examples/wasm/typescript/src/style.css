@@ -1,12 +1,26 @@
+body {
+  background-color: hsl(226, 23%, 11%);
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #bcbdd0;
   margin-top: 60px;
 }
 
 .display {
+  display: inline-block;
+  padding: 20px;
   white-space: pre-wrap;
+  background-color: hsl(263, 30%, 25%);
+}
+
+pre {
+  text-align: left;
+  display: inline-block;
+  padding: 20px;
+  background-color: hsl(226, 23%, 18%);
 }

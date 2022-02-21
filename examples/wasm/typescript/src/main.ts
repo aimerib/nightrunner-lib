@@ -13,7 +13,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!
 const first_room_text = nr.first_room_text();
 
 app.innerHTML = `
-<h1>Nightrunner output result</h1>
+<h1>Nightrunner example output result</h1>
 <p class="display">${first_room_text.message}</p>
 `
 
@@ -26,7 +26,7 @@ app.innerHTML += `
   <h3>Event message</h3>
   <p class="display">${message}</p>
   <h3>Payload</h3>
-  <pre>${JSON.stringify(result)}</pre>
+  <pre>${JSON.stringify(result, null, 2)}</pre>
 `
 
 result = JSON.parse(nr.parse("look at item1"));
@@ -38,7 +38,7 @@ app.innerHTML += `
   <h3>Event message</h3>
   <p class="display">${message}</p>
   <h3>Payload</h3>
-  <pre>${JSON.stringify(result)}</pre>
+  <pre>${JSON.stringify(result, null, 2)}</pre>
   `
 
 result = JSON.parse(nr.parse("south"));
@@ -48,9 +48,9 @@ app.innerHTML += `
   <br />
   <br />
   <h2>Input:</h2>
-  <pre>look at item1</pre>
+  <pre>south</pre>
   <h3>Event message</h3>
   <p class="display">${message}</p>
   <h3>Payload</h3>
-  <pre>${JSON.stringify(result)}</pre>
+  <pre>${JSON.stringify(result, null, 2)}</pre>
   `
