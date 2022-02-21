@@ -10,5 +10,9 @@
   "devDependencies": {
     "typescript": "^4.5.4",
     "vite": "^2.8.0"
+  },
+  "dependencies": {
+    "@nightrunner/nightrunner_lib": "^0.1.2",
+    "vite-plugin-wasm-pack": "^0.1.9"
   }
 }
