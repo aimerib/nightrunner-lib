@@ -1,13 +1,15 @@
-use std::collections::HashMap;
-
-#[cfg(test)]
-use pretty_assertions::assert_eq;
-
+#[cfg(not(target_arch = "wasm32"))]
 use nightrunner_lib::{
     parser::interpreter::{MessageParts, ParsingResult},
     NightRunnerBuilder,
 };
+#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
+use pretty_assertions::assert_eq;
+#[cfg(not(target_arch = "wasm32"))]
+use std::collections::HashMap;
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn it_works_with_path_to_configs() {
     let nr = NightRunnerBuilder::new()
         .with_path_for_config("fixtures/")
@@ -26,6 +28,7 @@ fn it_works_with_path_to_configs() {
     );
 }
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn it_works_with_json_data() {
     use nightrunner_lib::parser::interpreter::EventMessage;
     let data = nightrunner_lib::util::test_helpers::mock_json_data();
