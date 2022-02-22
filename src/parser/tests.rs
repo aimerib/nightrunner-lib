@@ -80,7 +80,7 @@ fn it_parses_verb_and_item_or_subject() {
     // a message to the user saying that this action is invalid,
     // or you don't understand the command.
     // For convenience, this error wraps the action as it was
-    // interpreted by the parser from the imput. This is useful
+    // interpreted by the parser from the input. This is useful
     // when writing custom logic for the front-end.
     assert_eq!(result.unwrap_err().to_string(), InvalidEvent.to_string());
 }

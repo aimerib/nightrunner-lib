@@ -31,9 +31,9 @@ use serde::{Deserialize, Serialize};
 ///     Quit,
 /// }
 /// ```
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
-
 pub enum ParsingResult {
     Help(String),
     Look(String),
@@ -449,7 +449,12 @@ fn show_inventory(state: &RefCell<State>) -> NRResult<ParsingResult> {
         .iter()
         .map(|item| {
             let mut item_name = item.name.clone();
-            item_name.insert_str(0, "a ");
+            let first_char = &item_name.to_lowercase().chars().next().unwrap();
+            if ['a', 'e', 'i', 'o', 'u'].contains(&first_char) {
+                item_name.insert_str(0, "an ");
+            } else {
+                item_name.insert_str(0, "a ");
+            }
             item_name
         })
         .collect();
@@ -547,27 +552,49 @@ fn look_room(state: &RefCell<State>) -> NRResult<ParsingResult> {
         Some(room) => room,
         None => return Err(NoRoom.into()),
     };
+    let room_subjects = state
+        .borrow()
+        .config
+        .subjects
+        .clone()
+        .iter()
+        .filter(|subject| current_room.subjects.contains(&subject.id))
+        .map(|subject| subject.name.clone())
+        .collect::<Vec<String>>()
+        .join("\n");
     let description = &current_room.description;
     let items = current_room.stash.items.clone();
 
     let items_descriptions = if items.len() > 0 {
         format!(
-            "Here you see: \n\n{}",
+            "Here you see: \n{}",
             items
                 .iter()
                 .clone()
-                .map(|item| { format!("a {}", &item) })
+                .map(|item| {
+                    let first_char = &item.name.to_lowercase().chars().next().unwrap();
+                    if ['a', 'e', 'i', 'o', 'u'].contains(first_char) {
+                        format!("an {}", item.name)
+                    } else {
+                        format!("a {}", &item)
+                    }
+                })
                 .collect::<Vec<String>>()
                 .join("\n")
         )
     } else {
         "".to_string()
     };
-    let room_description = if items_descriptions.is_empty() {
+    let mut room_description = if items_descriptions.is_empty() {
         format!("{}", description)
     } else {
-        format!("{}\n{}", description, items_descriptions)
+        format!("{}\n\n{}", description, items_descriptions)
     };
+    if room_subjects.is_empty() {
+        ()
+    } else {
+        room_description.push_str(&format!("\n{}", room_subjects));
+    }
 
     Ok(ParsingResult::Look(room_description))
 }
