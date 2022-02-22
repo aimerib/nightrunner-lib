@@ -271,7 +271,9 @@
 //! the `config` module.
 use config::{Config, State};
 use parser::interpreter::{EventMessage, ParsingResult};
-use std::{cell::RefCell, rc::Rc};
+#[cfg(target_arch = "wasm32")]
+use serde::{Deserialize, Serialize};
+use std::{cell::RefCell, error::Error, rc::Rc};
 use util::parse_room_text;
 pub mod config;
 pub mod parser;
@@ -279,7 +281,7 @@ pub mod util;
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
-pub type NRResult<T> = Result<T, Box<dyn std::error::Error>>;
+pub type NRResult<T> = Result<T, Box<dyn Error>>;
 
 /// This is the main struct for this library
 /// and represents the game. It holds the state
@@ -633,8 +635,29 @@ impl NightRunner {
 }
 
 #[cfg(target_arch = "wasm32")]
+// #[wasm_bindgen]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "messageType", content = "data")]
+#[serde(rename_all = "camelCase")]
+pub enum JsMessage {
+    Look(String),
+    Help(String),
+    NewItem(String),
+    DropItem(String),
+    Inventory(String),
+    SubjectNoEvent(String),
+    EventSuccess(EventMessage),
+    Quit(String),
+}
+
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 impl NightRunner {
+    /// When using the wasm library we won't have access to the
+    /// builder patter, so the constructor needs to receive the
+    /// configuration for games as a parameter.
+    ///
+    /// config should be a JSON string.
     #[wasm_bindgen(constructor)]
     pub fn new(config: &str) -> NightRunner {
         let config = Config::from_json(config);
@@ -645,20 +668,30 @@ impl NightRunner {
     /// the input string to this function and it will return
     /// a result that can be used on the front-end to display
     /// the game to the user.
-    /// Unlike the `parse_input` function, this function will
-    /// return the result in JSON format. This is useful for
-    /// front-ends that can't integrate with a rust library.
-    pub fn parse(&self, input: &str) -> String {
+    /// Unlike the non-wasm version, this function will return
+    /// the result in JSON format. The conversion of the result
+    /// to JSON is done by the `JsValue::from_serde` function from
+    /// wasm_bindgen.
+    pub fn parse(&self, input: &str) -> Result<JsValue, JsError> {
         let result = parser::parse(self.state.clone(), input);
-        let json = match result {
-            Ok(ok) => format!("{{\"ok\":{}}}", serde_json::to_string(&ok).unwrap()),
-            Err(err) => format!(
-                "{{\"error\":{}}}",
-                serde_json::to_string(&err.to_string()).unwrap()
-            ),
-        };
-        json
+        match result {
+            Ok(ok) => {
+                let message = match ok {
+                    ParsingResult::Look(msg) => JsMessage::Look(msg),
+                    ParsingResult::Help(msg) => JsMessage::Help(msg),
+                    ParsingResult::NewItem(msg) => JsMessage::NewItem(msg),
+                    ParsingResult::DropItem(msg) => JsMessage::DropItem(msg),
+                    ParsingResult::Inventory(msg) => JsMessage::Inventory(msg),
+                    ParsingResult::SubjectNoEvent(msg) => JsMessage::SubjectNoEvent(msg),
+                    ParsingResult::EventSuccess(event_msg) => JsMessage::EventSuccess(event_msg),
+                    ParsingResult::Quit => JsMessage::Quit("quit".to_string()),
+                };
+                Ok(JsValue::from_serde(&message).unwrap())
+            }
+            Err(err) => Err(JsError::new(&err.to_string())),
+        }
     }
+
     /// Returns the string with the game intro text. This can
     /// be used to display the game intro to the user, but isn't
     /// required.
