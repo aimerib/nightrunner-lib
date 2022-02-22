@@ -17,3 +17,4 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 
 [dev-dependencies]
 pretty_assertions = "1.1.0"
+wasm-bindgen-test = "0.3.29"
