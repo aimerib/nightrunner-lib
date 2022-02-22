@@ -1,6 +1,9 @@
 //! All possible errors that can occur when parsing
 //! the input. These errors should be returned to a
 //! front-end for handling display to the user.
+//!
+//! All errors have Display implemented for them,
+//! so they can be easily serialized to a string.
 
 use std::error;
 use std::fmt;
@@ -49,7 +52,7 @@ impl Into<RequiredEventNotCompleted> for &Box<dyn std::error::Error> {
 /// // a message to the user saying that this action is invalid,
 /// // or you don't understand the command.
 /// // For convenience, this error wraps the action as it was
-/// // interpreted by the parser from the imput. This is useful
+/// // interpreted by the parser from the input. This is useful
 /// // when writing custom logic for the front-end.
 /// assert_eq!(
 ///     result.unwrap_err().to_string(),
@@ -80,9 +83,6 @@ impl Into<InvalidEvent> for &Box<dyn std::error::Error> {
     }
 }
 
-/// Wraps the failed action and
-/// can be used to display specific error messages in
-/// the front-end.
 #[derive(Debug, Clone)]
 pub struct InvalidAction;
 impl std::fmt::Display for InvalidAction {
@@ -143,9 +143,6 @@ impl Into<InvalidVerb> for &Box<dyn std::error::Error> {
     }
 }
 
-/// Wraps a MoveError struct with
-/// the appropriate variants to construct a message
-/// to display to the user.
 #[derive(Debug, Clone)]
 pub struct InvalidMovement;
 impl std::fmt::Display for InvalidMovement {
@@ -266,8 +263,6 @@ impl Into<NoRoom> for &Box<dyn std::error::Error> {
     }
 }
 
-/// Wraps an error message to display to
-/// the user.
 #[derive(Debug, Clone)]
 pub struct CantPick;
 impl std::fmt::Display for CantPick {
@@ -283,8 +278,6 @@ impl Into<CantPick> for &Box<dyn std::error::Error> {
     }
 }
 
-/// Wraps an error message to display to
-/// the user.
 #[derive(Debug, Clone)]
 pub struct NoItem;
 impl std::fmt::Display for NoItem {
@@ -319,7 +312,7 @@ impl Into<ItemNotFound> for &Box<dyn std::error::Error> {
 pub struct EmptyInput;
 impl std::fmt::Display for EmptyInput {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "No imput. Nothing to process.")
+        write!(f, "No input. Nothing to process.")
     }
 }
 
