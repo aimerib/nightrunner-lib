@@ -59,6 +59,7 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+          target: wasm32-unknown-unknown
           override: true
       - uses: jetli/wasm-pack-action@v0.3.0
       - uses: browser-actions/setup-firefox@latest
