@@ -14,7 +14,7 @@ pub fn mock_config() -> Config {
         allowed_determiners: AllowedDeterminers::init(),
         allowed_directions: AllowedDirections::init(),
         allowed_movements: AllowedMovements::init(),
-        intro: "text".to_string(),
+        intro: "The introduction text to be displayed at the begining of the game.".to_string(),
         allowed_verbs: vec![
             Verb {
                 id: 1,
