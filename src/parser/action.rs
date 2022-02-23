@@ -16,11 +16,23 @@ use serde::{Deserialize, Serialize};
 /// determine the type of action.
 #[derive(Debug, PartialEq)]
 pub enum ActionType {
+    /// Action is a single verb
+    /// Example: "look", "quit"
     Verb,
+    /// Action has a verb and a subject
+    /// Example: "talk to subject"
     VerbSubject,
+    /// Action has a verb and an item
+    /// Example: "take item", "drop item"
     VerbItem,
+    /// Action has a verb, an item, and a subject
+    /// Example: "give item to subject"
     VerbItemSubject,
+    /// An action that failed to be parsed from
+    /// the input tokens.
     Invalid,
+    /// Action has a direction
+    /// Example: "north", "south", "east", "west"
     Movement,
 }
 
@@ -82,7 +94,11 @@ pub struct Action {
     /// direction and all other fields will
     /// be set to None.
     pub movement: Option<Directions>,
+    /// The tokens from the user input.
+    /// This is created by spliting the string
+    /// on spaces.
     pub command_tokens: Vec<String>,
+    /// The original input from the user.
     pub input: String,
 }
 

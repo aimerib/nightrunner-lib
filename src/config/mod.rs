@@ -1,8 +1,8 @@
-pub mod determiners;
-pub mod directions;
-pub mod movements;
-pub mod prepositions;
-pub mod rooms;
+pub(crate) mod determiners;
+pub(crate) mod directions;
+pub(crate) mod movements;
+pub(crate) mod prepositions;
+pub(crate) mod rooms;
 
 use self::determiners::AllowedDeterminers;
 use self::directions::AllowedDirections;
@@ -24,7 +24,9 @@ use std::rc::Rc;
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Narrative {
+    /// Narrative id used when referencing the narrative.
     pub id: u16,
+    /// The actual text of the narrative to be displayed.
     pub text: String,
     /// This is a human readable name for the narrative.
     pub description: String,
@@ -77,8 +79,15 @@ pub struct Narrative {
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Verb {
+    /// The id of the verb used when referencing the verb.
     pub id: u16,
+    /// A verb can be named anything and can have multiple aliases,
+    /// so commands like `look` and `peek` can be used interchangeably.
     pub names: Vec<String>,
+    /// The function that the verb serves. Since some verbs are reserved
+    /// for specific functions, this field is used to determine what
+    /// function the verb serves, and this allows verbs to be named
+    /// anything. For the possible functions see the [VerbFunction](VerbFunction) enum.
     pub verb_function: VerbFunction,
 }
 impl std::fmt::Display for Verb {
@@ -105,20 +114,34 @@ impl std::fmt::Display for Verb {
 #[serde(rename_all = "snake_case")]
 pub enum VerbFunction {
     #[serde(rename = "quit")]
+    /// The quit verb is used to quit the game.
     Quit,
     #[serde(rename = "help")]
+    /// The help verb is used to display the help text.
     Help,
     #[serde(rename = "look")]
+    /// The look verb is used to look at a room, item, or subject.
     Look,
     #[serde(rename = "inventory")]
+    /// The inventory verb is used to display the inventory.
     Inventory,
     #[serde(rename = "take")]
+    /// The take verb is used to take an item from a room.
+    /// Some items can't be picked up, and some other items
+    /// can only be given to the player through an event.
     Take,
     #[serde(rename = "drop")]
+    /// The drop verb is used to drop an item in a room. When
+    /// a player drops an item, the item is removed from the
+    /// player's inventory and placed in the room where it can
+    /// be retrieved again.
     Drop,
     #[serde(rename = "talk")]
+    /// The talk verb is used to talk to a character in a room.
     Talk,
     #[serde(rename = "normal")]
+    /// Any other verbs should be set to this variant and will
+    /// be parsed by the event handling function.
     Normal,
 }
 
@@ -144,7 +167,9 @@ pub enum VerbFunction {
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Subject {
+    /// The id of the subject used when referencing the subject.
     pub id: u16,
+    /// The name of the subject.
     pub name: String,
     /// This is what the parser will use when the player
     /// looks at the subject.
@@ -221,6 +246,7 @@ impl std::fmt::Display for Subject {
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct Event {
+    /// The id of the event used when referencing the event.
     pub id: u16,
     /// Room id where the event happens.
     pub location: u16,
@@ -302,20 +328,27 @@ struct ConfigData {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq)]
 #[serde(rename_all = "snake_case")]
 pub struct Config {
-    // This field is hardcoded in the library.
+    /// This field is hardcoded in the library.
     pub allowed_prepositions: AllowedPrepositions,
-    // This field is hardcoded in the library.
+    /// This field is hardcoded in the library.
     pub allowed_determiners: AllowedDeterminers,
-    // This field is hardcoded in the library.
+    /// This field is hardcoded in the library.
     pub allowed_movements: AllowedMovements,
-    // This field is hardcoded in the library.
+    /// This field is hardcoded in the library.
     pub allowed_directions: AllowedDirections,
+    /// All the allowed verbs in the game.
     pub allowed_verbs: Vec<Verb>,
+    /// All the possible items in the game.
     pub items: Vec<Item>,
+    /// All the possible subjects in the game.
     pub subjects: Vec<Subject>,
+    /// All the possible narratives in the game.
     pub narratives: Vec<Narrative>,
+    /// All the possible events in the game.
     pub events: Vec<Event>,
+    /// The intro text to be displayed when the game starts.
     pub intro: String,
+    /// All the possible rooms in the game.
     pub rooms: Vec<Room>,
 }
 
@@ -870,6 +903,7 @@ impl State {
 /// This struct represents the player's current state.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Player {
+    /// The player's inventory
     pub inventory: Storage,
 }
 

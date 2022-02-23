@@ -7,6 +7,7 @@ use crate::config::{
     Config, Event, Narrative, State, Subject, Verb, VerbFunction,
 };
 
+/// Returns a sample Config that can be used during testing.
 pub fn mock_config() -> Config {
     Config {
         allowed_prepositions: AllowedPrepositions::init(),
@@ -263,11 +264,13 @@ pub fn mock_config() -> Config {
         ],
     }
 }
+/// function to create sample JSON data for testing
 pub fn mock_json_data() -> String {
     let data = mock_config();
     serde_json::to_string(&data).unwrap()
 }
 
+/// function to create sample State strcuture for testing
 pub fn mock_state() -> State {
     State::init(mock_config()).borrow().clone()
 }

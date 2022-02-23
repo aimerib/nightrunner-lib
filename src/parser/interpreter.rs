@@ -12,64 +12,51 @@ use crate::util::{
     player_remove_item, MoveSuccess,
 };
 use crate::NRResult;
+use crate::ParsingResult;
 use serde::{Deserialize, Serialize};
-
-/// This is the result of the parsing of the input.
-/// Each variant contains the output for the game and
-/// should be used by a front-end to display to the user.
-///
-/// ```rust, ignore
-/// pub enum ParsingResult {
-///     Movement(MoveSuccess),
-///     Help(String),
-///     Look(String),
-///     NewItem(String),
-///     DropItem(String),
-///     Inventory(String),
-///     SubjectNoEvent(String),
-///     EventSuccess(EventMessage),
-///     Quit,
-/// }
-/// ```
-
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "snake_case")]
-pub enum ParsingResult {
-    Help(String),
-    Look(String),
-    NewItem(String),
-    DropItem(String),
-    Inventory(String),
-    SubjectNoEvent(String),
-    EventSuccess(EventMessage),
-    Quit,
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
+/// An enum representing the different parts of a message returned
+/// by the parser when an event is successfully parsed.
 pub enum MessageParts {
+    /// The current text of the room. This will be the either be
+    /// the current event's narrative, or the current room's narrative
+    /// and the event narrative, depending on whether or not the
+    /// event is marked to replace the narrative.
     RoomText,
+    /// The text generated while processing the event. Primarily used
+    /// to indicate when the user lost or received an item.
     EventText,
+    /// A string containing all of the current room's exits and the
+    /// description of the room they lead to.
     Exits,
 }
 
-/// Represents the result of parsing an event. This struct
-/// contains only two fields:
-/// * `message` - The message to display to the user.
-/// * `templated_words` - Items or subjects that the
-/// front-end implementation can choose to highlight. This
-/// field can be safely ignored by the front-end.
+/// Represents the result of parsing an event.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub struct EventMessage {
+    /// The message to display to the user as a single string.
     pub message: String,
+    /// The parts of the message to display to the user. This
+    /// hashmap uses the `MessageParts` enum as the key, and
+    /// the string value of the message part as the value.
+    /// For more information about the variants of `MessageParts`,
+    /// see the [MessageParts](MessageParts) enum.
     pub message_parts: HashMap<MessageParts, String>,
+    /// Items or subjects that the front-end implementation
+    /// can choose to highlight. This field can be safely ignored
+    /// by the front-end if no highlighting is being implemented.
     pub templated_words: Vec<String>,
 }
 
 /// This is the function that decides what to do with the
 /// input based on the action type.
-pub fn process_action(state: &Rc<RefCell<State>>, action: Action) -> NRResult<ParsingResult> {
+pub(super) fn process_action(
+    state: &Rc<RefCell<State>>,
+    action: Action,
+) -> NRResult<ParsingResult> {
     match action.action_type() {
         ActionType::VerbItemSubject => handle_event(&mut *state.borrow_mut(), action),
         ActionType::VerbSubject => handle_verb_subject(&mut *state.borrow_mut(), action),

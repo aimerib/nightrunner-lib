@@ -19,11 +19,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq)]
 #[serde(rename_all = "snake_case")]
 pub struct AllowedDeterminers {
-    pub determiners: Vec<String>,
+    pub(crate) determiners: Vec<String>,
 }
 
 impl AllowedDeterminers {
-    pub fn init() -> AllowedDeterminers {
+    pub(crate) fn init() -> AllowedDeterminers {
         let determiners = vec![
             "my",
             "our",

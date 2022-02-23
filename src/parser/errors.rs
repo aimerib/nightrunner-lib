@@ -84,6 +84,7 @@ impl Into<InvalidEvent> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the action is invalid
 pub struct InvalidAction;
 impl std::fmt::Display for InvalidAction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -99,6 +100,10 @@ impl Into<InvalidAction> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid item. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidItem;
 impl std::fmt::Display for InvalidItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -114,6 +119,10 @@ impl Into<InvalidItem> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid subject. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidSubject;
 impl std::fmt::Display for InvalidSubject {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -129,6 +138,10 @@ impl Into<InvalidSubject> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid verb. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidVerb;
 impl std::fmt::Display for InvalidVerb {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -144,6 +157,10 @@ impl Into<InvalidVerb> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid movement. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidMovement;
 impl std::fmt::Display for InvalidMovement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -159,6 +176,10 @@ impl Into<InvalidMovement> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid direction. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidDirection;
 impl std::fmt::Display for InvalidDirection {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -174,6 +195,10 @@ impl Into<InvalidDirection> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid room. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidRoom;
 impl std::fmt::Display for InvalidRoom {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -189,6 +214,8 @@ impl Into<InvalidRoom> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to parse
+/// an invalid combination of command tokens.
 pub struct InvalidVerbItemSubject;
 impl std::fmt::Display for InvalidVerbItemSubject {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -204,6 +231,8 @@ impl Into<InvalidVerbItemSubject> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to parse
+/// an invalid combination of command tokens.
 pub struct InvalidVerbSubject;
 impl std::fmt::Display for InvalidVerbSubject {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -219,6 +248,8 @@ impl Into<InvalidVerbSubject> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to parse
+/// an invalid combination of command tokens.
 pub struct InvalidVerbItem;
 impl std::fmt::Display for InvalidVerbItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -234,6 +265,8 @@ impl Into<InvalidVerbItem> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to parse
+/// a room text and fails.
 pub struct ParsingRoomText;
 impl std::fmt::Display for ParsingRoomText {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -249,6 +282,8 @@ impl Into<ParsingRoomText> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when no room is found while
+/// parsing the action.
 pub struct NoRoom;
 impl std::fmt::Display for NoRoom {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -264,6 +299,8 @@ impl Into<NoRoom> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the player tries to
+/// pick up an item marked as cant_pick.
 pub struct CantPick;
 impl std::fmt::Display for CantPick {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -279,6 +316,8 @@ impl Into<CantPick> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when trying to remove an item from the player
+/// that is not in their inventory.
 pub struct NoItem;
 impl std::fmt::Display for NoItem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -294,6 +333,8 @@ impl Into<NoItem> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when trying to remove an item from the player
+/// that is not in their inventory.
 pub struct ItemNotFound;
 impl std::fmt::Display for ItemNotFound {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -309,6 +350,9 @@ impl Into<ItemNotFound> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when trying to process an empty input.
+/// The front-end should handle this scenario, but this
+/// error is provided as a convenience.
 pub struct EmptyInput;
 impl std::fmt::Display for EmptyInput {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -324,6 +368,10 @@ impl Into<EmptyInput> for &Box<dyn std::error::Error> {
 }
 
 #[derive(Debug, Clone)]
+/// Error returned when the parser tries to access
+/// an invalid narrative. This will likely be an issue
+/// in the configuration passed to nightrunner_lib
+/// when initializing the parser.
 pub struct InvalidNarrative;
 impl std::fmt::Display for InvalidNarrative {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

@@ -8,11 +8,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq)]
 #[serde(rename_all = "snake_case")]
 pub struct AllowedDirections {
-    pub directions: Vec<String>,
+    pub(crate) directions: Vec<String>,
 }
 
 impl AllowedDirections {
-    pub fn init() -> AllowedDirections {
+    pub(crate) fn init() -> AllowedDirections {
         let directions = vec![
             "north", "south", "east", "west", "up", "down", "left", "right",
         ]
@@ -31,12 +31,16 @@ impl AllowedDirections {
 #[serde(rename_all = "snake_case")]
 pub enum Directions {
     #[serde(rename = "east")]
+    /// Move to the east.
     EAST,
     #[serde(rename = "north")]
+    /// Move to the north.
     NORTH,
     #[serde(rename = "south")]
+    /// Move to the south.
     SOUTH,
     #[serde(rename = "west")]
+    /// Move to the west.
     WEST,
 }
 impl std::fmt::Display for Directions {

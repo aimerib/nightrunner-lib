@@ -1,5 +1,10 @@
+/// Module for the action parser. [Actions](Actions)
+/// are structs containing the important information
+/// needed to parse the user input.
 pub mod action;
 pub mod errors;
+/// Module with the various functions used to parse
+/// the user input.
 pub mod interpreter;
 
 use std::cell::RefCell;
@@ -7,9 +12,10 @@ use std::rc::Rc;
 
 use self::action::Action;
 use self::errors::{EmptyInput, InvalidAction};
-use self::interpreter::{process_action, ParsingResult};
+use self::interpreter::process_action;
 use crate::config::State;
 use crate::NRResult;
+use crate::ParsingResult;
 
 /// This is the main function that executes the game.
 /// The `NightRunner` struct is the main entry point

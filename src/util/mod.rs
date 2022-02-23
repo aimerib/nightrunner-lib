@@ -5,14 +5,17 @@ use std::iter::FromIterator;
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+/// Module containing a few utility functions to
+/// make testing a little easier.
 pub mod test_helpers;
 
 use crate::config::directions::Directions;
 use crate::config::rooms::Item;
 use crate::config::{Player, State};
 use crate::parser::errors::{InvalidMovement, InvalidRoom, NoItem, NoRoom};
-use crate::parser::interpreter::{EventMessage, MessageParts, ParsingResult};
+use crate::parser::interpreter::{EventMessage, MessageParts};
 use crate::NRResult;
+use crate::ParsingResult;
 
 /// This struct is used when parsing the narrative text.
 /// Narrative texts can contain template strings, which are replaced with

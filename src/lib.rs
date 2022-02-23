@@ -18,270 +18,83 @@
 //! ```rust
 //! use nightrunner_lib::NightRunner;
 //! use nightrunner_lib::NightRunnerBuilder;
-//! use nightrunner_lib::parser::interpreter::{ParsingResult};
-//! let data = r#"{
-//!   "allowed_verbs": [
-//!     {
-//!       "id": 1,
-//!       "names": [
-//!         "quit",
-//!         ":q",
-//!         "q"
-//!       ],
-//!       "verb_function": "quit"
-//!     },
-//!     {
-//!       "id": 7,
-//!       "names": [
-//!         "give",
-//!         "hand"
-//!       ],
-//!       "verb_function": "normal"
-//!     },
-//!     {
-//!       "id": 2,
-//!       "names": [
-//!         "help"
-//!       ],
-//!       "verb_function": "help"
-//!     },
-//!     {
-//!       "id": 3,
-//!       "names": [
-//!         "look",
-//!         "stare"
-//!       ],
-//!       "verb_function": "look"
-//!     },
-//!     {
-//!       "id": 4,
-//!       "names": [
-//!         "inventory",
-//!         "i"
-//!       ],
-//!       "verb_function": "inventory"
-//!     },
-//!     {
-//!       "id": 6,
-//!       "names": [
-//!         "drop",
-//!         "place"
-//!       ],
-//!       "verb_function": "drop"
-//!     },
-//!     {
-//!       "id": 8,
-//!       "names": [
-//!         "talk",
-//!         "chat"
-//!       ],
-//!       "verb_function": "talk"
-//!     },
-//!     {
-//!       "id": 5,
-//!       "names": [
-//!         "pick",
-//!         "take",
-//!         "grab",
-//!         "pi",
-//!         "tk",
-//!         "gr",
-//!         "get",
-//!         "g"
-//!       ],
-//!       "verb_function": "take"
-//!     },
-//!     {
-//!       "id": 9,
-//!       "names": [
-//!         "hug"
-//!       ],
-//!       "verb_function": "normal"
-//!     }
-//!   ],
-//!   "items": [
-//!     {
-//!       "id": 1,
-//!       "name": "item1",
-//!       "description": "item 1 description",
-//!       "can_pick": false
-//!     },
-//!     {
-//!       "id": 2,
-//!       "name": "item2",
-//!       "description": "item 2 description",
-//!       "can_pick": true
-//!     }
-//!   ],
-//!   "subjects": [
-//!     {
-//!       "id": 1,
-//!       "name": "subject1",
-//!       "description": "a subject description",
-//!       "default_text": "default text"
-//!     }
-//!   ],
-//!   "narratives": [
-//!     {
-//!       "id": 1,
-//!       "text": "text",
-//!       "description": "text"
-//!     },
-//!     {
-//!       "id": 2,
-//!       "text": "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}.",
-//!       "description": "text"
-//!     },
-//!     {
-//!       "id": 3,
-//!       "text": "this narrative should replace the old one.",
-//!       "description": "a replaced narrative"
-//!     }
-//!   ],
-//!   "events": [
-//!     {
-//!       "id": 1,
-//!       "name": "text",
-//!       "description": "text",
-//!       "location": 1,
-//!       "destination": null,
-//!       "narrative": 1,
-//!       "required_verb": 2,
-//!       "required_subject": 1,
-//!       "required_item": null,
-//!       "completed": false,
-//!       "add_item": null,
-//!       "remove_old_narrative": false,
-//!       "remove_item": null,
-//!       "required_events": []
-//!     },
-//!     {
-//!       "id": 2,
-//!       "name": "text",
-//!       "description": "text",
-//!       "location": 1,
-//!       "destination": null,
-//!       "narrative": 3,
-//!       "required_verb": 9,
-//!       "required_subject": 1,
-//!       "required_item": null,
-//!       "completed": false,
-//!       "add_item": null,
-//!       "remove_old_narrative": true,
-//!       "remove_item": null,
-//!       "required_events": [
-//!         4
-//!       ]
-//!     },
-//!     {
-//!       "id": 3,
-//!       "name": "text",
-//!       "description": "text",
-//!       "location": 1,
-//!       "destination": null,
-//!       "narrative": 2,
-//!       "required_verb": 2,
-//!       "required_subject": 1,
-//!       "required_item": null,
-//!       "completed": false,
-//!       "add_item": null,
-//!       "remove_old_narrative": true,
-//!       "remove_item": null,
-//!       "required_events": [
-//!         2
-//!       ]
-//!     },
-//!     {
-//!       "id": 4,
-//!       "name": "text",
-//!       "description": "text",
-//!       "location": 1,
-//!       "destination": null,
-//!       "narrative": 1,
-//!       "required_verb": 8,
-//!       "required_subject": 1,
-//!       "required_item": null,
-//!       "completed": false,
-//!       "add_item": null,
-//!       "remove_old_narrative": true,
-//!       "remove_item": null,
-//!       "required_events": []
-//!     }
-//!   ],
-//!   "intro": "text",
-//!   "rooms": [
-//!     {
-//!       "id": 1,
-//!       "name": "room 1",
-//!       "description": "first room",
-//!       "exits": [
-//!         {
-//!           "room_id": 2,
-//!           "direction": "south"
-//!         }
-//!       ],
-//!       "stash": {
-//!         "items": [],
-//!         "item_ids": [
-//!           1,
-//!           2
-//!         ]
-//!       },
-//!       "room_events": [
-//!         1, 4, 2
-//!       ],
-//!       "narrative": 1,
-//!       "subjects": [
-//!         1
-//!       ]
-//!     },
-//!     {
-//!       "id": 2,
-//!       "name": "room 2",
-//!       "description": "second room",
-//!       "exits": [
-//!         {
-//!           "room_id": 1,
-//!           "direction": "north"
-//!         }
-//!       ],
-//!       "stash": {
-//!         "items": [],
-//!         "item_ids": []
-//!       },
-//!       "room_events": [],
-//!       "narrative": 2,
-//!       "subjects": []
-//!     }
-//!   ]
-//! }"#;
+//! use nightrunner_lib::util::test_helpers::mock_json_data;
+//! let data = mock_json_data();
 //! let nr = NightRunnerBuilder::new().with_json_data(data).build();
 //! let result = nr.parse_input("look");
 //! let json_result = nr.json_parse_input("look");
 //! assert!(result.is_ok());
 //! assert_eq!(result.unwrap(),
-//!     ParsingResult::Look(String::from("first room\nHere you see: \n\na item1\na item2"))
+//!     ParsingResult::Look(String::from("first room\n\nHere you see: \nan item1\nan item2\nsubject1"))
 //! );
 //! assert_eq!(json_result,
-//!     "{\"ok\":{\"look\":\"first room\\nHere you see: \\n\\na item1\\na item2\"}}".to_string()
+//!     "{\"ok\":{\"look\":\"first room\\n\\nHere you see: \\nan item1\\nan item2\\nsubject1\"}}".to_string()
 //! );
 //! ```
 //!
 //! for examples of valid YAML and JSON data, see the documentation for
 //! the `config` module.
+#![warn(missing_docs)]
 use config::{Config, State};
-use parser::interpreter::{EventMessage, ParsingResult};
+use parser::interpreter::EventMessage;
+use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, error::Error, rc::Rc};
 use util::parse_room_text;
+/// Module containing the configuration code for this
+/// library.
 pub mod config;
+/// The parser module contains a single function that
+/// parses the input string and returns a `ParsingResult`.
 pub mod parser;
+/// Helper functions.
 pub mod util;
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
+/// We use a type alias to make error handling easier.
 pub type NRResult<T> = Result<T, Box<dyn Error>>;
+
+/// This is the result of the parsing of the input.
+/// Each variant contains the output for the game and
+/// should be used by a front-end to display to the user.
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum ParsingResult {
+    /// Returned when the player sends a command corresponding
+    /// to a verb that has VerbFunction::Help as its verb_function.
+    /// The value is a string generated by the library displaying
+    /// general commands as well as verbs available in the game.
+    Help(String),
+    /// Returned when the player sends a command for looking at the
+    /// room, an item, or a subject. The value will be the message
+    /// returned from the parser with the description associated with
+    /// the room, item, or subject.
+    Look(String),
+    /// Returned when the player receives a new item, either by picking
+    /// it up or by receiving it as the result of an event.
+    NewItem(String),
+    /// Returned when the player loses an item, either by dropping it
+    /// or by losing it as the result of an event.
+    DropItem(String),
+    /// Returned when the player issues a command with a verb that
+    /// has VerbFunction::Inventory as its verb_function. The value is
+    /// a string containing each item in the player's inventory.
+    Inventory(String),
+    /// Returned when the player issues a command that interacts with
+    /// a subject without a current event associated with it. The value
+    /// is the default text for the subject.
+    SubjectNoEvent(String),
+    /// Returned when an event is triggered by the player's command. The
+    /// returned struct contains the text to be displayed to the player.
+    EventSuccess(EventMessage),
+    /// Returned when the player issues a command with a verb that has
+    /// VerbFunction::Quit as its verb_function. This variant is used
+    /// to indicate to the front-end that the game should be quit.
+    /// Implementation of how to quit the game is left to the front-end.
+    Quit,
+}
 
 /// This is the main struct for this library
 /// and represents the game. It holds the state
@@ -300,242 +113,8 @@ pub struct NightRunner {
 /// # Examples:
 /// ```rust
 /// use nightrunner_lib::NightRunnerBuilder;
-/// let data = r#"{
-///   "allowed_verbs": [
-///     {
-///       "id": 1,
-///       "names": [
-///         "quit",
-///         ":q",
-///         "q"
-///       ],
-///       "verb_function": "quit"
-///     },
-///     {
-///       "id": 7,
-///       "names": [
-///         "give",
-///         "hand"
-///       ],
-///       "verb_function": "normal"
-///     },
-///     {
-///       "id": 2,
-///       "names": [
-///         "help"
-///       ],
-///       "verb_function": "help"
-///     },
-///     {
-///       "id": 3,
-///       "names": [
-///         "look",
-///         "stare"
-///       ],
-///       "verb_function": "look"
-///     },
-///     {
-///       "id": 4,
-///       "names": [
-///         "inventory",
-///         "i"
-///       ],
-///       "verb_function": "inventory"
-///     },
-///     {
-///       "id": 6,
-///       "names": [
-///         "drop",
-///         "place"
-///       ],
-///       "verb_function": "drop"
-///     },
-///     {
-///       "id": 8,
-///       "names": [
-///         "talk",
-///         "chat"
-///       ],
-///       "verb_function": "talk"
-///     },
-///     {
-///       "id": 5,
-///       "names": [
-///         "pick",
-///         "take",
-///         "grab",
-///         "pi",
-///         "tk",
-///         "gr",
-///         "get",
-///         "g"
-///       ],
-///       "verb_function": "take"
-///     },
-///     {
-///       "id": 9,
-///       "names": [
-///         "hug"
-///       ],
-///       "verb_function": "normal"
-///     }
-///   ],
-///   "items": [
-///     {
-///       "id": 1,
-///       "name": "item1",
-///       "description": "item 1 description",
-///       "can_pick": false
-///     },
-///     {
-///       "id": 2,
-///       "name": "item2",
-///       "description": "item 2 description",
-///       "can_pick": true
-///     }
-///   ],
-///   "subjects": [
-///     {
-///       "id": 1,
-///       "name": "subject1",
-///       "description": "a subject description",
-///       "default_text": "default text"
-///     }
-///   ],
-///   "narratives": [
-///     {
-///       "id": 1,
-///       "text": "text",
-///       "description": "text"
-///     },
-///     {
-///       "id": 2,
-///       "text": "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}.",
-///       "description": "text"
-///     },
-///     {
-///       "id": 3,
-///       "text": "this narrative should replace the old one.",
-///       "description": "a replaced narrative"
-///     }
-///   ],
-///   "events": [
-///     {
-///       "id": 1,
-///       "name": "text",
-///       "description": "text",
-///       "location": 1,
-///       "destination": null,
-///       "narrative": 1,
-///       "required_verb": 2,
-///       "required_subject": 1,
-///       "required_item": null,
-///       "completed": false,
-///       "add_item": null,
-///       "remove_old_narrative": false,
-///       "remove_item": null,
-///       "required_events": []
-///     },
-///     {
-///       "id": 2,
-///       "name": "text",
-///       "description": "text",
-///       "location": 1,
-///       "destination": null,
-///       "narrative": 3,
-///       "required_verb": 9,
-///       "required_subject": 1,
-///       "required_item": null,
-///       "completed": false,
-///       "add_item": null,
-///       "remove_old_narrative": true,
-///       "remove_item": null,
-///       "required_events": [
-///         4
-///       ]
-///     },
-///     {
-///       "id": 3,
-///       "name": "text",
-///       "description": "text",
-///       "location": 1,
-///       "destination": null,
-///       "narrative": 2,
-///       "required_verb": 2,
-///       "required_subject": 1,
-///       "required_item": null,
-///       "completed": false,
-///       "add_item": null,
-///       "remove_old_narrative": true,
-///       "remove_item": null,
-///       "required_events": [
-///         2
-///       ]
-///     },
-///     {
-///       "id": 4,
-///       "name": "text",
-///       "description": "text",
-///       "location": 1,
-///       "destination": null,
-///       "narrative": 1,
-///       "required_verb": 8,
-///       "required_subject": 1,
-///       "required_item": null,
-///       "completed": false,
-///       "add_item": null,
-///       "remove_old_narrative": true,
-///       "remove_item": null,
-///       "required_events": []
-///     }
-///   ],
-///   "intro": "text",
-///   "rooms": [
-///     {
-///       "id": 1,
-///       "name": "room 1",
-///       "description": "first room",
-///       "exits": [
-///         {
-///           "room_id": 2,
-///           "direction": "south"
-///         }
-///       ],
-///       "stash": {
-///         "items": [],
-///         "item_ids": [
-///           1,
-///           2
-///         ]
-///       },
-///       "room_events": [
-///         1, 4, 2
-///       ],
-///       "narrative": 1,
-///       "subjects": [
-///         1
-///       ]
-///     },
-///     {
-///       "id": 2,
-///       "name": "room 2",
-///       "description": "second room",
-///       "exits": [
-///         {
-///           "room_id": 1,
-///           "direction": "north"
-///         }
-///       ],
-///       "stash": {
-///         "items": [],
-///         "item_ids": []
-///       },
-///       "room_events": [],
-///       "narrative": 2,
-///       "subjects": []
-///     }
-///   ]
-/// }"#;
+/// use nighrunner_lib::util::test_helpers::mock_json_data;
+/// let data = mock_json_data();
 /// let path_to_yaml = "fixtures/";
 /// let nr1 = NightRunnerBuilder::new().with_json_data(data);
 /// let nr2 = NightRunnerBuilder::new().with_path_for_config(path_to_yaml);
@@ -576,6 +155,10 @@ impl NightRunnerBuilder {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+/// # Nightrunner Rust Library
+///
+/// Use this implementation when using this library
+/// in a Rust application.
 impl NightRunner {
     /// This is the main function that executes the game. Pass
     /// the input string to this function and it will return
@@ -634,24 +217,51 @@ impl NightRunner {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-// #[wasm_bindgen]
+#[cfg(any(target_arch = "wasm32", doc))]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "messageType", content = "data")]
 #[serde(rename_all = "camelCase")]
+/// When compiling for the web, this struct is used to
+/// serialize the game state to JSON. `messageType` is
+/// the type of the message returned by the library to
+/// indicate which action was processed by the parser.
 pub enum JsMessage {
-    Look(String),
+    /// Returned when the player sends a command corresponding
+    /// to a verb that has VerbFunction::Help as its verb_function.
+    /// The value is a string generated by the library displaying
+    /// general commands as well as verbs available in the game.
     Help(String),
+    /// Returned when the player sends a command for looking at the
+    /// room, an item, or a subject. The value will be the message
+    /// returned from the parser with the description associated with
+    /// the room, item, or subject.
+    Look(String),
+    /// Returned when the player receives a new item, either by picking
+    /// it up or by receiving it as the result of an event.
     NewItem(String),
+    /// Returned when the player loses an item, either by dropping it
+    /// or by losing it as the result of an event.
     DropItem(String),
+    /// Returned when the player issues a command with a verb that
+    /// has VerbFunction::Inventory as its verb_function. The value is
+    /// a string containing each item in the player's inventory.
     Inventory(String),
+    /// Returned when the player issues a command that interacts with
+    /// a subject without a current event associated with it. The value
+    /// is the default text for the subject.
     SubjectNoEvent(String),
+    /// Returned when an event is triggered by the player's command. The
+    /// returned struct contains the text to be displayed to the player.
     EventSuccess(EventMessage),
-    Quit(String),
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(target_arch = "wasm32", doc))]
 #[wasm_bindgen]
+/// # Nightrunner Wasm Library
+///
+/// Use this implementation when using this library
+/// in a WebAssembly browser application. This is the
+/// implementation exposed when compiling with `--target=wasm32-unknown-unknown`.
 impl NightRunner {
     /// When using the wasm library we won't have access to the
     /// builder patter, so the constructor needs to receive the
@@ -684,7 +294,6 @@ impl NightRunner {
                     ParsingResult::Inventory(msg) => JsMessage::Inventory(msg),
                     ParsingResult::SubjectNoEvent(msg) => JsMessage::SubjectNoEvent(msg),
                     ParsingResult::EventSuccess(event_msg) => JsMessage::EventSuccess(event_msg),
-                    ParsingResult::Quit => JsMessage::Quit("quit".to_string()),
                 };
                 Ok(JsValue::from_serde(&message).unwrap())
             }
