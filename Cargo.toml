@@ -27,7 +27,9 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 pretty_assertions = "1.1.0"
 wasm-bindgen-test = "0.3.29"
 crossterm = "0.23.0"
-cursive = { version = "0.17.0", features = ["crossterm-backend"] }
+cursive = { version = "0.17.0", default-features = false, features = [
+  "crossterm-backend",
+] }
 cursive-aligned-view = "0.6.0"
 
 [[example]]

@@ -28,8 +28,8 @@ jobs:
           override: true
       - name: Cache dependencies
         uses: actions/cache@v2
-        env:
-          cache-name: cache-dependencies
+        # env:
+        #   cache-name: cache-dependencies
         with:
           path: |
             ~/.cargo/bin/
@@ -37,6 +37,6 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Run tests
         run: cargo test
