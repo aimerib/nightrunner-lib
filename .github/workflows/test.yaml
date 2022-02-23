@@ -4,7 +4,7 @@ on:
     branches:
       - main
 
-name: Test with Code Coverage
+name: Test Suite
 
 jobs:
   test:
@@ -12,7 +12,7 @@ jobs:
     env:
       PROJECT_NAME_UNDERSCORE: nightrunner_lib
       CARGO_INCREMENTAL: 0
-      RUSTFLAGS: -Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort
+      RUSTFLAGS: -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort
       RUSTDOCFLAGS: -Cpanic=abort
     runs-on: ${{ matrix.os }}
     strategy:
