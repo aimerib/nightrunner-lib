@@ -8,7 +8,7 @@ license = "Apache-2.0"
 repository = "https://github.com/aimerib/nightrunner-lib"
 documentation = "https://docs.rs/nightrunner_lib"
 categories = ["parsing"]
-keywords = ["text adventures", "parsing", "wasm", "game"]
+keywords = ["engine", "parsing", "wasm", "game"]
 readme = "README.md"
 
 [lib]
