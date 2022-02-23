@@ -1,6 +1,6 @@
 [package]
 name = "nightrunner_lib"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Aimeri Baddouh <aimeri@baddouh.me>"]
 description = "A parser library for making text adventure games"

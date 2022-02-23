@@ -1,14 +1,12 @@
-name: Reusable workflow example
+name: Deploy to crates.io
 
 on:
   workflow_call:
     secrets:
-      token:
+      CARGO_REGISTRY_TOKEN:
         required: true
-
 jobs:
   deploy:
-    name: Deploy to NPM
     env:
       CARGO_INCREMENTAL: 0
     runs-on: ubuntu-latest
@@ -30,10 +28,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-      - name: Package file
-        run: wasm-pack build --target web --scope nightrunner --release
-      - uses: JS-DevTools/npm-publish@v1
+      - uses: katyo/publish-crates@v1
         with:
-          token: ${{ secrets.token }}
-          package: ./pkg/package.json
-          access: public
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

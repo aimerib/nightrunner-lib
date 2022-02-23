@@ -5,8 +5,13 @@ on:
 jobs:
   test:
     uses: ./.github/workflows/test.yaml
-  deploy:
+  deploy_npm:
     needs: test
-    uses: ./.github/workflows/deploy.yaml
+    uses: ./.github/workflows/deploy_to_npm.yaml
     secrets:
-      token: ${{ secrets.NPM_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  deploy_crates:
+    needs: test
+    uses: ./.github/workflows/deploy_to_crates.yaml
+    secrets:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
