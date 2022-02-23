@@ -36,3 +36,4 @@ jobs:
         with:
           token: ${{ secrets.token }}
           package: ./pkg/package.json
+          access: public
