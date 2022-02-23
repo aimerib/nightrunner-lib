@@ -1,0 +1,38 @@
+name: Reusable workflow example
+
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to NPM
+    env:
+      CARGO_INCREMENTAL: 0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: jetli/wasm-pack-action@v0.3.0
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+      - name: Package file
+        run: wasm-pack build --target web --scope nightrunner --release
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.token }}
+          package: ./pkg/package.json
