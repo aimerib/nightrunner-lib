@@ -12,7 +12,7 @@
     "vite": "^2.8.0"
   },
   "dependencies": {
-    "@nightrunner/nightrunner_lib": "^0.1.2",
+    "@nightrunner/nightrunner_lib": "^0.1.0",
     "vite-plugin-wasm-pack": "^0.1.9"
   }
 }
