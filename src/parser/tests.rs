@@ -21,7 +21,9 @@ fn it_parses_single_verb() {
     result = parse(state.clone(), "look");
     assert_eq!(
         result.unwrap(),
-        ParsingResult::Look("first room\nHere you see: \n\na item1\na item2".to_string())
+        ParsingResult::Look(
+            "first room\n\nHere you see: \nan item1\nan item2\nsubject1".to_string()
+        )
     );
 }
 #[test]

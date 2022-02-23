@@ -12,7 +12,9 @@ fn it_looks_at_room() {
     assert!(look_result1.is_ok());
     assert_eq!(
         look_result1.unwrap(),
-        ParsingResult::Look("first room\nHere you see: \n\na item1\na item2".to_string())
+        ParsingResult::Look(
+            "first room\n\nHere you see: \nan item1\nan item2\nsubject1".to_string()
+        )
     );
     assert!(look_result2.is_err());
     assert_eq!(look_result2.unwrap_err().to_string(), NoRoom.to_string());
@@ -155,7 +157,7 @@ fn it_shows_inventory() {
     let inventory_result2 = show_inventory(&state);
     assert_eq!(
         inventory_result2.unwrap(),
-        ParsingResult::Inventory("You are currently carrying: \n\na item1".to_string())
+        ParsingResult::Inventory("You are currently carrying: \n\nan item1".to_string())
     );
     state.borrow_mut().player.inventory.items.push(Item {
         id: 8,
@@ -166,7 +168,7 @@ fn it_shows_inventory() {
     let inventory_result3 = show_inventory(&mut state);
     assert_eq!(
         inventory_result3.unwrap(),
-        ParsingResult::Inventory("You are currently carrying: \n\na item1\na item2".to_string())
+        ParsingResult::Inventory("You are currently carrying: \n\nan item1\nan item2".to_string())
     );
 }
 
@@ -297,7 +299,7 @@ fn it_handles_verbs() {
     assert_eq!(
         verb_result2.unwrap(),
         ParsingResult::Look(String::from(
-            "first room\nHere you see: \n\na item1\na item2"
+            "first room\n\nHere you see: \nan item1\nan item2\nsubject1"
         ))
     );
     assert_eq!(
