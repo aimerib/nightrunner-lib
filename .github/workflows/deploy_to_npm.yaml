@@ -38,3 +38,4 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./pkg/package.json
           access: public
+          check-versions: true
