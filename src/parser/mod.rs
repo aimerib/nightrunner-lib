@@ -1,4 +1,4 @@
-/// Module for the action parser. [Actions](Actions)
+/// Module for the action parser. [Action](Action)
 /// are structs containing the important information
 /// needed to parse the user input.
 pub mod action;
