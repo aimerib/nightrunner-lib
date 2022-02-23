@@ -11,7 +11,7 @@ fn it_can_move() {
         description: "text".to_owned(),
         exits: vec![Exits {
             room_id: 2,
-            direction: Directions::NORTH,
+            direction: Directions::North,
         }],
         stash: Storage {
             items: vec![],
@@ -21,7 +21,7 @@ fn it_can_move() {
         narrative: 1,
         subjects: vec![],
     };
-    let room_id = room.can_move(Directions::NORTH);
+    let room_id = room.can_move(Directions::North);
     assert_eq!(room_id, Ok(2));
 }
 #[test]
@@ -32,7 +32,7 @@ fn it_adds_item() {
         description: "text".to_owned(),
         exits: vec![Exits {
             room_id: 2,
-            direction: Directions::NORTH,
+            direction: Directions::North,
         }],
         stash: Storage {
             items: vec![],
@@ -66,7 +66,7 @@ fn it_removes_item() {
         description: "text".to_owned(),
         exits: vec![Exits {
             room_id: 2,
-            direction: Directions::NORTH,
+            direction: Directions::North,
         }],
         stash: Storage {
             items: vec![item.clone()],
@@ -78,9 +78,9 @@ fn it_removes_item() {
     };
 
     let remove_result = room.stash.remove_item(item.clone());
-    assert_eq!(remove_result.unwrap(), item.clone());
+    assert_eq!(remove_result.unwrap(), item);
     assert_eq!(room.stash.items.len(), 0);
-    let remove_error = room.stash.remove_item(item.clone());
+    let remove_error = room.stash.remove_item(item);
     assert_eq!(
         remove_error.unwrap_err().to_string(),
         "You're not carrying that.".to_string()

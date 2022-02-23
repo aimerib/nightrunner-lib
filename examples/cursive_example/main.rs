@@ -181,11 +181,11 @@ pub fn intro(intro_text: String) -> impl View {
                         0,
                         1,
                         0,
-                        TextView::new_with_content(title.clone()).h_align(HAlign::Center),
+                        TextView::new_with_content(title).h_align(HAlign::Center),
                     ))
                     .child(DummyView.fixed_height(2))
                     .child(ResizedView::with_full_height(
-                        TextView::new_with_content(body.clone())
+                        TextView::new_with_content(body)
                             .v_align(VAlign::Center)
                             .h_align(HAlign::Center),
                     )),

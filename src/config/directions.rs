@@ -32,24 +32,24 @@ impl AllowedDirections {
 pub enum Directions {
     #[serde(rename = "east")]
     /// Move to the east.
-    EAST,
+    East,
     #[serde(rename = "north")]
     /// Move to the north.
-    NORTH,
+    North,
     #[serde(rename = "south")]
     /// Move to the south.
-    SOUTH,
+    South,
     #[serde(rename = "west")]
     /// Move to the west.
-    WEST,
+    West,
 }
 impl std::fmt::Display for Directions {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Directions::NORTH => write!(f, "north"),
-            Directions::SOUTH => write!(f, "south"),
-            Directions::EAST => write!(f, "east"),
-            Directions::WEST => write!(f, "west"),
+            Directions::North => write!(f, "north"),
+            Directions::South => write!(f, "south"),
+            Directions::East => write!(f, "east"),
+            Directions::West => write!(f, "west"),
         }
     }
 }

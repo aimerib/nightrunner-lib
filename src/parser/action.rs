@@ -227,16 +227,15 @@ fn parse_action(state: &State, command_tokens: Vec<String>, input: &str) -> Acti
     }
 }
 
-fn extract_verb(state: &State, command_tokens: &Vec<String>) -> Option<Verb> {
+fn extract_verb(state: &State, command_tokens: &[String]) -> Option<Verb> {
     let verbs = state.config.allowed_verbs.clone();
-    if let Some(verb) = verbs.iter().find(|v| v.names.contains(&command_tokens[0])) {
-        Some(verb.clone())
-    } else {
-        None
-    }
+    verbs
+        .iter()
+        .find(|v| v.names.contains(&command_tokens[0]))
+        .cloned()
 }
 
-fn extract_item(state: &State, command_tokens: &Vec<String>, input: &str) -> Option<Item> {
+fn extract_item(state: &State, command_tokens: &[String], input: &str) -> Option<Item> {
     let subjects = state.config.subjects.clone();
     let items_string: String = state
         .config
@@ -248,23 +247,19 @@ fn extract_item(state: &State, command_tokens: &Vec<String>, input: &str) -> Opt
     let items_regex_match = format!("({})", items_string);
     let re = Regex::new(&items_regex_match[..]).unwrap();
 
-    let item = if command_tokens.len() > 1
-        && subjects
-            .iter()
-            .find(|s| &s.name == &command_tokens[1])
-            .is_none()
+    let item = if command_tokens.len() > 1 && !subjects.iter().any(|s| s.name == command_tokens[1])
     {
-        if let Some(capture) = re.captures(&input) {
+        if let Some(capture) = re.captures(input) {
             match capture.get(1) {
                 Some(_) => {
                     let item = state
                         .config
                         .items
                         .iter()
-                        .find(|item| item.name == capture.get(1).unwrap().as_str().to_string())
+                        .find(|item| item.name == *capture.get(1).unwrap().as_str())
                         .unwrap()
                         .to_owned();
-                    Some(item.to_owned())
+                    Some(item)
                 }
                 None => None,
             }
@@ -281,23 +276,14 @@ fn extract_subject(state: &State, command_tokens: &[String]) -> Option<Subject> 
     let subjects = state.config.subjects.clone();
     match &command_tokens.len() {
         0 | 1 => None,
-        2 => {
-            if let Some(subject) = subjects.iter().find(|s| &s.name == &command_tokens[1]) {
-                Some(subject.clone())
-            } else {
-                None
-            }
-        }
-        _ => {
-            if let Some(subject) = subjects
-                .iter()
-                .find(|s| &s.name == &command_tokens[&command_tokens.len() - 1])
-            {
-                Some(subject.clone())
-            } else {
-                None
-            }
-        }
+        2 => subjects
+            .iter()
+            .find(|s| s.name == command_tokens[1])
+            .cloned(),
+        _ => subjects
+            .iter()
+            .find(|s| s.name == command_tokens[&command_tokens.len() - 1])
+            .cloned(),
     }
 }
 
@@ -311,19 +297,19 @@ fn extract_movement(state: &State, command_tokens: &[String]) -> Option<Directio
     let directions = state.config.allowed_directions.directions.clone();
     match command_tokens.len() {
         1 => match &command_tokens[0][..] {
-            "north" | "n" => Some(Directions::NORTH),
-            "south" | "s" => Some(Directions::SOUTH),
-            "east" | "e" => Some(Directions::EAST),
-            "west" | "w" => Some(Directions::WEST),
+            "north" | "n" => Some(Directions::North),
+            "south" | "s" => Some(Directions::South),
+            "east" | "e" => Some(Directions::East),
+            "west" | "w" => Some(Directions::West),
             _ => None,
         },
         2 => {
             if movements.contains(&command_tokens[0]) && directions.contains(&command_tokens[1]) {
                 match &command_tokens[1][..] {
-                    "north" | "n" => Some(Directions::NORTH),
-                    "south" | "s" => Some(Directions::SOUTH),
-                    "east" | "e" => Some(Directions::EAST),
-                    "west" | "w" => Some(Directions::WEST),
+                    "north" | "n" => Some(Directions::North),
+                    "south" | "s" => Some(Directions::South),
+                    "east" | "e" => Some(Directions::East),
+                    "west" | "w" => Some(Directions::West),
                     _ => None,
                 }
             } else {

@@ -122,8 +122,8 @@ pub fn player_get_item(state: &mut State, item: Item) -> NRResult<ParsingResult>
 /// indicates that the player should receive an item.
 pub fn player_receive_item(state: &mut State, item: Item) -> String {
     state.player.inventory.add_item(item.clone());
-    let item_message = format!("\nYou now have a {}\n", item.clone().name);
-    item_message.clone()
+    let item_message = format!("\nYou now have a {}\n", item.name);
+    item_message
 }
 
 /// This function is used to remove an item from the player's inventory
@@ -131,10 +131,7 @@ pub fn player_receive_item(state: &mut State, item: Item) -> String {
 /// event indicates that the player should lose an item.
 pub fn player_remove_item(player: &mut Player, item: Item) -> NRResult<String> {
     let old_item = player.inventory.remove_item(item)?;
-    Ok(format!(
-        "\nYou no longer have a {}\n",
-        old_item.name.clone()
-    ))
+    Ok(format!("\nYou no longer have a {}\n", old_item.name))
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -156,7 +153,7 @@ impl Display for MoveSuccess {
 /// is updated and a `ParsingResult::Movement(MoveSuccess)` is returned.
 pub fn move_to_direction(state: &mut State, direction: Directions) -> NRResult<MoveSuccess> {
     let mut state_ref = state;
-    let current_room_id = state_ref.current_room.clone();
+    let current_room_id = state_ref.current_room;
     if let Some(current_room) = state_ref
         .rooms
         .iter_mut()
@@ -278,23 +275,15 @@ pub fn parse_room_text(
         .iter()
         .find(|event| Some(event.id) == event_id);
     if let Some(event) = event {
-        match event.add_item {
-            Some(item_id) => {
-                match state.config.items.iter().find(|item| item.id == item_id) {
-                    Some(item) => event_items.push(item.name.clone()),
-                    None => (),
-                };
-            }
-            None => (),
+        if let Some(item_id) = event.add_item {
+            if let Some(item) = state.config.items.iter().find(|item| item.id == item_id) {
+                event_items.push(item.name.clone())
+            };
         }
-        match event.remove_item {
-            Some(item_id) => {
-                match state.config.items.iter().find(|item| item.id == item_id) {
-                    Some(item) => event_items.push(item.name.clone()),
-                    None => (),
-                };
-            }
-            None => (),
+        if let Some(item_id) = event.remove_item {
+            if let Some(item) = state.config.items.iter().find(|item| item.id == item_id) {
+                event_items.push(item.name.clone())
+            };
         }
     };
 
@@ -337,7 +326,7 @@ pub fn parse_room_text(
     message_parts.insert(MessageParts::RoomText, room_text.clone());
     message_parts.insert(MessageParts::Exits, exits_string.clone());
     message_parts.insert(MessageParts::EventText, event_text.clone());
-    let message = room_text.clone() + "\n" + event_text.as_str() + "\n\n" + exits_string.as_str();
+    let message = room_text + "\n" + event_text.as_str() + "\n\n" + exits_string.as_str();
     let mut templated_words = templated_words_room
         .iter()
         .chain(templated_words_event.iter())
@@ -346,18 +335,18 @@ pub fn parse_room_text(
     templated_words.sort_unstable();
     templated_words.dedup();
     Ok(EventMessage {
-        message: message.clone(),
+        message,
         message_parts,
-        templated_words: templated_words,
+        templated_words,
     })
 }
 
-fn process_templated_text(text: String, items_and_subjects: &Vec<String>) -> (String, Vec<String>) {
+fn process_templated_text(text: String, items_and_subjects: &[String]) -> (String, Vec<String>) {
     let mut templated_words: Vec<String> = Vec::new();
     let processed_text = text
         .lines()
         .map(|sentence| {
-            let mut extracted_text = sentence.clone().to_string();
+            let mut extracted_text = sentence.to_string();
             let re = Regex::new(r"\{(.*?)\}").unwrap();
             let templated_word_captures: TemplateCaptures = re
                 .captures_iter(sentence)

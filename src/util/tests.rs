@@ -63,10 +63,10 @@ fn it_moves_player() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
     let state_ref = &mut *state.borrow_mut();
-    let result1 = move_to_direction(state_ref, Directions::NORTH);
-    let result2 = move_to_direction(state_ref, Directions::SOUTH);
-    let result3 = move_to_direction(state_ref, Directions::EAST);
-    let result4 = move_to_direction(state_ref, Directions::NORTH);
+    let result1 = move_to_direction(state_ref, Directions::North);
+    let result2 = move_to_direction(state_ref, Directions::South);
+    let result3 = move_to_direction(state_ref, Directions::East);
+    let result4 = move_to_direction(state_ref, Directions::North);
     assert_eq!(
         result1.unwrap_err().to_string(),
         InvalidMovement.to_string()
@@ -182,12 +182,7 @@ fn it_parses_room_text() {
     // room two doesn't contain the items templated in the narrative
     state.borrow_mut().current_room = 2;
     // so here we expect it to return just the narrative and the exits information for display.
-    result = parse_room_text(
-        state.borrow().clone(),
-        narrative_text.clone(),
-        "".to_string(),
-        None,
-    );
+    result = parse_room_text(state.borrow().clone(), narrative_text, "".to_string(), None);
     message_parts.insert(
         MessageParts::Exits,
         String::from("Exits:\nto the north you see first room"),

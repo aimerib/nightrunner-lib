@@ -122,7 +122,7 @@ pub fn mock_config() -> Config {
                 description: String::from("first room"),
                 exits: vec![Exits {
                     room_id: 2,
-                    direction: Directions::SOUTH,
+                    direction: Directions::South,
                 }],
                 stash: Storage {
                     items: Vec::new(),
@@ -138,7 +138,7 @@ pub fn mock_config() -> Config {
                 description: String::from("second room"),
                 exits: vec![Exits {
                     room_id: 1,
-                    direction: Directions::NORTH,
+                    direction: Directions::North,
                 }],
                 stash: Storage {
                     items: Vec::new(),

@@ -157,6 +157,12 @@ impl NightRunnerBuilder {
     }
 }
 
+impl Default for NightRunnerBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 /// # Nightrunner Rust Library
 ///
@@ -199,7 +205,7 @@ impl NightRunner {
     /// Since there is no input to parse when the game starts,
     /// this function should be used to retrieve that text instead.
     pub fn first_room_text(&self) -> NRResult<EventMessage> {
-        let narrative_id = self.state.borrow().rooms[0].narrative.clone();
+        let narrative_id = self.state.borrow().rooms[0].narrative;
         let narrative_text = self
             .state
             .borrow()

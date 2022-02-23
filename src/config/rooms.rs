@@ -63,7 +63,7 @@ impl Room {
 /// This struct represents the storage for both the player
 /// and the room and implements functions to add and remove
 /// items from the storage.
-#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub struct Storage {
     /// This field contains the list of actual
@@ -93,15 +93,6 @@ impl Storage {
         match target_item {
             Some(item_index) => Ok(self.items.remove(item_index)),
             None => Err(NoItem.into()),
-        }
-    }
-}
-
-impl Default for Storage {
-    fn default() -> Self {
-        Self {
-            items: vec![],
-            item_ids: vec![],
         }
     }
 }

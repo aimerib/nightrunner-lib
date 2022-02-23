@@ -18,7 +18,7 @@ fn it_creates_narratives() {
             text: String::from("This is the first narrative."),
             description: String::from("This is the first narrative.")
         }],
-        serde_yaml::from_str::<Vec<Narrative>>(&narratives_config_yaml[..]).unwrap()
+        serde_yaml::from_str::<Vec<Narrative>>(narratives_config_yaml).unwrap()
     );
 }
 #[test]
@@ -35,7 +35,7 @@ fn it_creates_items() {
             description: String::from("a rusty sword"),
             can_pick: true
         }],
-        serde_yaml::from_str::<Vec<Item>>(&items_config[..]).unwrap()
+        serde_yaml::from_str::<Vec<Item>>(items_config).unwrap()
     );
 }
 #[test]
@@ -51,7 +51,7 @@ fn it_creates_allowed_verbs_from_yaml() {
             names: vec![String::from("go")],
             verb_function: VerbFunction::Normal
         }],
-        serde_yaml::from_str::<Vec<Verb>>(&allowed_verbs_config[..]).unwrap()
+        serde_yaml::from_str::<Vec<Verb>>(allowed_verbs_config).unwrap()
     );
 }
 #[test]
@@ -68,7 +68,7 @@ fn it_creates_subjects() {
             description: String::from("text"),
             default_text: String::from("text")
         }],
-        serde_yaml::from_str::<Vec<Subject>>(&subject_config[..]).unwrap()
+        serde_yaml::from_str::<Vec<Subject>>(subject_config).unwrap()
     );
 }
 #[test]
@@ -98,7 +98,7 @@ fn it_creates_rooms() {
             description: String::from("text"),
             exits: vec![Exits {
                 room_id: 2,
-                direction: directions::Directions::SOUTH,
+                direction: directions::Directions::South,
             }],
             stash: Storage {
                 items: Vec::new(),
@@ -108,7 +108,7 @@ fn it_creates_rooms() {
             narrative: 2,
             subjects: vec![4],
         },],
-        serde_yaml::from_str::<Vec<Room>>(&rooms_config[..]).unwrap()
+        serde_yaml::from_str::<Vec<Room>>(rooms_config).unwrap()
     );
 }
 #[test]
@@ -117,7 +117,7 @@ fn it_creates_intro() {
         text";
     assert_eq!(
         "text".to_string(),
-        serde_yaml::from_str::<String>(&intro_config[..]).unwrap()
+        serde_yaml::from_str::<String>(intro_config).unwrap()
     );
 }
 #[test]
@@ -154,7 +154,7 @@ fn it_creates_events() {
             remove_item: None,
             required_events: vec![],
         },],
-        serde_yaml::from_str::<Vec<Event>>(&events_config[..]).unwrap()
+        serde_yaml::from_str::<Vec<Event>>(events_config).unwrap()
     );
 }
 #[test]
@@ -167,7 +167,7 @@ fn it_creates_config_from_default_builder() {
 fn it_creates_state() {
     let config = Config::from_json(&test_helpers::mock_json_data());
 
-    let state = State::init(config.clone());
+    let state = State::init(config);
     let state2 = State::init(Config::from_path("fixtures/"));
     let state_object = mock_state();
     assert_eq!(

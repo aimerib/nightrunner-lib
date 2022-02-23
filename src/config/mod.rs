@@ -658,12 +658,12 @@ impl Config {
             allowed_determiners: AllowedDeterminers::init(),
             allowed_movements: AllowedMovements::init(),
             allowed_directions: AllowedDirections::init(),
-            items: items,
-            subjects: subjects,
-            narratives: narratives,
-            events: events,
+            items,
+            subjects,
+            narratives,
+            events,
             intro: config_data.intro,
-            rooms: rooms,
+            rooms,
         }
     }
     /// # Config::init_yaml
@@ -789,15 +789,11 @@ impl State {
         let mut rooms = config.clone().rooms;
         for room in &mut rooms {
             for room_item_id in &mut room.stash.item_ids {
-                if items
-                    .iter()
-                    .find(|i| &i.id == &room_item_id.clone())
-                    .is_some()
-                {
+                if items.iter().any(|i| i.id == *room_item_id) {
                     room.stash.items.push(
                         items
                             .iter()
-                            .find(|i| &i.id == &room_item_id.clone())
+                            .find(|i| i.id == *room_item_id)
                             .unwrap()
                             .to_owned(),
                     );
@@ -814,7 +810,7 @@ impl State {
                 },
             },
             rooms,
-            config: config,
+            config,
         };
         Rc::new(RefCell::new(state))
     }

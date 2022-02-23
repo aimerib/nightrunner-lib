@@ -18,7 +18,7 @@ fn it_parses_single_verb() {
     let mut result = parse(state.clone(), "quit");
     assert_eq!(result.unwrap(), ParsingResult::Quit);
 
-    result = parse(state.clone(), "look");
+    result = parse(state, "look");
     assert_eq!(
         result.unwrap(),
         ParsingResult::Look(
@@ -74,7 +74,7 @@ fn it_parses_verb_and_item_or_subject() {
         })
     );
 
-    result = parse(state.clone(), "give item2 to subject2");
+    result = parse(state, "give item2 to subject2");
     // There is no event for player giving item2 to subject2
     // so we expect an error. InvalidEvent should be used to
     // indicate that the event is not valid, and how to handle

@@ -5,10 +5,10 @@ use pretty_assertions::assert_eq;
 #[test]
 fn it_looks_at_room() {
     let config = Config::from_path("fixtures/");
-    let mut state = State::init(config);
+    let state = State::init(config);
     let look_result1 = look_room(&state);
     state.borrow_mut().current_room = 7;
-    let look_result2 = look_room(&mut state);
+    let look_result2 = look_room(&state);
     assert!(look_result1.is_ok());
     assert_eq!(
         look_result1.unwrap(),
@@ -111,7 +111,7 @@ fn it_drops_items() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
     let state_ref = &mut *state.borrow_mut();
-    let current_room_id = state_ref.current_room.clone();
+    let current_room_id = state_ref.current_room;
     let current_room = state_ref
         .rooms
         .iter()
@@ -141,7 +141,7 @@ fn it_drops_items() {
 #[test]
 fn it_shows_inventory() {
     let config = Config::from_path("fixtures/");
-    let mut state = State::init(config);
+    let state = State::init(config);
 
     let inventory_result_1 = show_inventory(&state);
     assert_eq!(
@@ -165,7 +165,7 @@ fn it_shows_inventory() {
         description: "item 2 description".to_string(),
         can_pick: false,
     });
-    let inventory_result3 = show_inventory(&mut state);
+    let inventory_result3 = show_inventory(&state);
     assert_eq!(
         inventory_result3.unwrap(),
         ParsingResult::Inventory("You are currently carrying: \n\nan item1\nan item2".to_string())
@@ -220,7 +220,7 @@ fn it_extracts_item_and_subject() {
     let action2 = Action {
         verb: Some(verb),
         subject: Some(subject.clone()),
-        item: Some(item2.clone()),
+        item: Some(item2),
         movement: None,
         command_tokens: vec![
             "go".to_string(),
@@ -233,7 +233,7 @@ fn it_extracts_item_and_subject() {
         verb: None,
         subject: None,
         item: None,
-        movement: Some(Directions::NORTH),
+        movement: Some(Directions::North),
         command_tokens: vec!["north".to_string()],
         input: "north".to_string(),
     };
@@ -250,8 +250,8 @@ fn it_handles_movement() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
     let state_ref = &mut *state.borrow_mut();
-    let movement_result1 = handle_movement(state_ref, Some(Directions::SOUTH));
-    let movement_result2 = handle_movement(state_ref, Some(Directions::SOUTH));
+    let movement_result1 = handle_movement(state_ref, Some(Directions::South));
+    let movement_result2 = handle_movement(state_ref, Some(Directions::South));
     let movement_result3 = handle_movement(state_ref, None);
     let mut message_parts = HashMap::new();
     message_parts.insert(MessageParts::RoomText, "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.".to_string());
@@ -265,7 +265,7 @@ fn it_handles_movement() {
         ParsingResult::EventSuccess(EventMessage{
             message: "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.\n\n\nExits:\nto the north you see first room".to_string(),
             templated_words: vec![],
-            message_parts: message_parts,
+            message_parts,
         })
     );
     assert_eq!(
@@ -287,7 +287,7 @@ fn it_handles_verbs() {
     let action_inventory = Action::parse(&state.borrow(), "i");
     let action_quit = Action::parse(&state.borrow(), "quit");
     let action_help = Action::parse(&state.borrow(), "help");
-    let verb_result1 = handle_verb(&state, action_north.clone());
+    let verb_result1 = handle_verb(&state, action_north);
     let verb_result2 = handle_verb(&state, action_look);
     let verb_result3 = handle_verb(&state, action_inventory);
     let verb_result4 = handle_verb(&state, action_quit);
@@ -321,11 +321,11 @@ fn it_handles_verb_items() {
     let action_drop_item = Action::parse(&state.borrow(), "drop item2");
     let action_wrong_verb = Action::parse(&state.borrow(), "quit item1");
     let action_look_item_result = handle_verb_item(&state, action_look_item);
-    let action_talk_subject_result = handle_verb_item(&state, action_talk_subject.clone());
+    let action_talk_subject_result = handle_verb_item(&state, action_talk_subject);
     let action_pick_item_result = handle_verb_item(&state, action_pick_item);
     let action_cant_pick_item_result = handle_verb_item(&state, action_cant_pick_item);
     let action_drop_item_result = handle_verb_item(&state, action_drop_item);
-    let action_wrong_verb_result = handle_verb_item(&state, action_wrong_verb.clone());
+    let action_wrong_verb_result = handle_verb_item(&state, action_wrong_verb);
     // Returns the item description if item is in the room
     assert_eq!(
         action_look_item_result.unwrap(),
@@ -365,10 +365,10 @@ fn it_handles_verb_subjects() {
     let action_look_subject = Action::parse(state_ref, "look subject1");
     let action_give_subject = Action::parse(state_ref, "give subject1");
 
-    let action_talk_subject_result = handle_verb_subject(state_ref, action_talk_subject.clone());
+    let action_talk_subject_result = handle_verb_subject(state_ref, action_talk_subject);
     let action_talk_subject2_result = handle_verb_subject(state_ref, action_talk_subject2);
     let action_look_subject_result = handle_verb_subject(state_ref, action_look_subject);
-    let action_give_subject_result = handle_verb_subject(state_ref, action_give_subject.clone());
+    let action_give_subject_result = handle_verb_subject(state_ref, action_give_subject);
     let mut message_parts = HashMap::new();
     message_parts.insert(MessageParts::RoomText, "text".to_string());
     message_parts.insert(
@@ -438,8 +438,8 @@ fn it_handles_events() {
             .config
             .events
             .iter()
-            .filter(|e| e.completed == true)
-            .map(|e| e.id.clone())
+            .filter(|e| e.completed)
+            .map(|e| e.id)
             .collect::<Vec<u16>>(),
         vec![4]
     );
@@ -448,15 +448,15 @@ fn it_handles_events() {
             .config
             .events
             .iter()
-            .filter(|e| e.completed == true)
-            .map(|e| e.id.clone())
+            .filter(|e| e.completed)
+            .map(|e| e.id)
             .collect::<Vec<u16>>(),
         vec![2, 4],
         "Event 2 should not be completed {:#?}",
         state_ref.config.events
     );
 
-    let action_give_subject_result = handle_event(state_ref, action_give_subject.clone());
+    let action_give_subject_result = handle_event(state_ref, action_give_subject);
     assert_eq!(
         action_give_subject_result.unwrap_err().to_string(),
         InvalidEvent.to_string()
@@ -469,8 +469,8 @@ fn it_handles_events() {
             .config
             .events
             .iter()
-            .filter(|e| e.completed == true)
-            .map(|e| e.id.clone())
+            .filter(|e| e.completed)
+            .map(|e| e.id)
             .collect::<Vec<u16>>(),
         vec![2, 4],
         "Event 2 should be completed at this point. {:#?}",
