@@ -26,7 +26,9 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 [dev-dependencies]
 pretty_assertions = "1.1.0"
 wasm-bindgen-test = "0.3.29"
-crossterm = "0.23.0"
+
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 cursive = { version = "0.17.0", default-features = false, features = [
   "crossterm-backend",
 ] }

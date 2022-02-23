@@ -8,17 +8,13 @@ name: Test Suite
 
 jobs:
   test:
-    name: Test
+    name: Unit Test
     env:
-      PROJECT_NAME_UNDERSCORE: nightrunner_lib
       CARGO_INCREMENTAL: 0
-      # RUSTFLAGS: -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Cpanic=abort
-      # RUSTDOCFLAGS: -Cpanic=abort
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    # runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -28,8 +24,7 @@ jobs:
           override: true
       - name: Cache dependencies
         uses: actions/cache@v2
-        # env:
-        #   cache-name: cache-dependencies
+
         with:
           path: |
             ~/.cargo/bin/
@@ -41,7 +36,10 @@ jobs:
       - name: Run tests
         run: cargo test
   test-wasm:
+    depends-on: test
     name: Test WASM
+    env:
+      CARGO_INCREMENTAL: 0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -63,4 +61,4 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Test WASM library
-        run: wasm-pack test --headless --firefox
+        run: wasm-pack test --headless --firefox -- --test web
