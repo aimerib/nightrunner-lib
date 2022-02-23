@@ -2,6 +2,14 @@
 name = "nightrunner_lib"
 version = "0.1.0"
 edition = "2021"
+authors = ["Aimeri Baddouh <aimeri@baddouh.me>"]
+description = "A parser library for making text adventure games"
+license = "Apache-2.0"
+repository = "https://github.com/aimerib/nightrunner-lib"
+documentation = "https://docs.rs/nightrunner_lib"
+categories = ["parsing"]
+keywords = ["text adventures", "parsing", "wasm", "game"]
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -18,3 +26,10 @@ wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 [dev-dependencies]
 pretty_assertions = "1.1.0"
 wasm-bindgen-test = "0.3.29"
+crossterm = "0.23.0"
+cursive = { version = "0.17.0", features = ["crossterm-backend"] }
+cursive-aligned-view = "0.6.0"
+
+[[example]]
+name = "cursive_example"
+crate-type = ["bin"]
