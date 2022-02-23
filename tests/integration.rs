@@ -1,6 +1,5 @@
-use nightrunner_lib::ParsingResult;
 #[cfg(not(target_arch = "wasm32"))]
-use nightrunner_lib::{parser::interpreter::MessageParts, NightRunnerBuilder};
+use nightrunner_lib::{parser::interpreter::MessageParts, NightRunnerBuilder, ParsingResult};
 #[cfg(test)]
 #[cfg(not(target_arch = "wasm32"))]
 use pretty_assertions::assert_eq;
@@ -24,7 +23,7 @@ fn it_works_with_path_to_configs() {
     let result_json = nr.json_parse_input("look");
     assert_eq!(
         result_json,
-        r#"{"ok":{"look":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}}"#
+        r#"{"messageType":"look","data":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}"#
     );
 }
 #[test]
@@ -110,6 +109,6 @@ fn it_works_with_json_data() {
     let result_json = nr.json_parse_input("look");
     assert_eq!(
         result_json,
-        r#"{"ok":{"look":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}}"#
+        r#"{"messageType":"look","data":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}"#
     );
 }

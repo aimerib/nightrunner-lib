@@ -57,24 +57,25 @@ pub struct Narrative {
 /// the look action.
 ///
 /// # Examples
-/// ```ignore
-/// Verb {
+/// ```rust
+/// # use nightrunner_lib::config::{Verb, VerbFunction};
+/// let verb1 = Verb {
 ///    id: 1,
-///    names: vec!["look", "peek"],
+///    names: vec!["look".to_string(), "peek".to_string()],
 ///    verb_function: VerbFunction::Look,
-/// }
+/// };
 ///
-/// Verb {
+/// let verb2 = Verb {
 ///    id: 2,
-///    names: vec!["take", "pick"],
+///    names: vec!["take".to_string(), "pick".to_string()],
 ///    verb_function: VerbFunction::Take,
-/// }
+/// };
 ///
-/// Verb {
+/// let verb3 = Verb {
 ///    id: 3,
-///    names: vec!["parkour", "flip"],
+///    names: vec!["parkour".to_string(), "flip".to_string()],
 ///    verb_function: VerbFunction::Normal,
-/// }
+/// };
 /// ```
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -156,13 +157,14 @@ pub enum VerbFunction {
 /// - A door
 ///
 /// Example:
-/// ```ignore
-/// Subject {
+/// ```rust
+/// # use nightrunner_lib::config::Subject;
+/// let subject = Subject {
 ///    id: 1,
 ///    name: "person".to_string(),
 ///    description: "A person dressed all in black".to_string(),
 ///    default_text: "Person: I'm busy now. Maybe later.".to_string(),
-/// }
+/// };
 /// ```
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -197,50 +199,52 @@ impl std::fmt::Display for Subject {
 ///
 /// # Examples:
 ///
-/// - An event that happens in room 1 as a response to
+/// An event that happens in room 1 as a response to
 /// talking to subject 2:
-/// ```ignore
-/// Event {
+/// ```rust
+/// # use nightrunner_lib::config::Event;
+/// let event = Event {
 ///   id: 1,
 ///   location: 1,
-///   name: "Talking to subject 1",
-///   description: "This event happens when you talk to subject 2.",
+///   name: "Talking to subject 1".to_string(),
+///   description: "This event happens when you talk to subject 2.".to_string(),
 ///   destination: None,
-///   narrative: 2,
+///   narrative: Some(2),
 ///   // here verb id 3 has to be marked with VerbFunction::Talk
-///   required_verb: 3,
-///   required_subject: 2,
+///   required_verb: Some(3),
+///   required_subject: Some(2),
 ///   required_item: None,
 ///   completed: false,
 ///   add_item: None,
-///   remove_old_narrative: None,
+///   remove_old_narrative: false,
 ///   remove_item: None,
-///   required_event: Vec::new(),
-/// }
+///   required_events: Vec::new(),
+/// };
 /// ```
 ///
-/// - An event that happens in room 2 as a response to
+/// An event that happens in room 2 as a response to
 /// using an item with a subject and requires event
 /// 1 to be completed:
-/// ```ignore
-/// Event {
+/// ```rust
+/// # use nightrunner_lib::config::Event;
+/// let event = Event {
 ///   id: 2,
 ///   location: 2,
-///   name: "Using item 3 with subject 1",
-///   description: "This event happens when you use an item with subject 1.",
+///   name: "Using item 3 with subject 1".to_string(),
+///   description: "This event happens when you use an item with subject 1.".to_string(),
 ///   destination: None,
-///   narrative: 4,
-///   // here verb id 2 would be marked with VerbFunction::Normal
-///   required_verb: 3,
-///   required_subject: 1,
-///   required_item: 3,
+///   narrative: Some(4),
+///   // here verb id 3 would be marked with VerbFunction::Normal
+///   required_verb: Some(3),
+///   required_subject: Some(1),
+///   required_item: Some(3),
 ///   completed: false,
 ///   add_item: None,
-///   remove_old_narrative: None,
+///   remove_old_narrative: false,
 ///   // here item id 3 would be removed after the event is completed
-///   remove_item: 3,
-///   required_event: Vec::new(),
-/// }
+///   remove_item: Some(3),
+///   required_events: Vec::new(),
+/// };
 /// ```
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
@@ -388,9 +392,10 @@ impl Config {
     /// for the game configuration.
     ///
     /// ## Example:
-    /// ```ignore
-    /// let data = crate::utils::mock_data();
-    /// let config = Config::init_json(data);
+    /// ```rust
+    /// # use nightrunner_lib::config::Config;
+    /// # let data = nightrunner_lib::util::test_helpers::mock_json_data();
+    /// let config = Config::from_json(&data);
     /// ```
     ///
     /// Example valid JSON:
@@ -681,8 +686,9 @@ impl Config {
     /// * `rooms.yml`
     ///
     /// ## Example:
-    /// ```ignore
-    /// let config = Config::init_yaml("/path/to/config");
+    /// ```rust
+    /// # use nightrunner_lib::config::Config;
+    /// let config = Config::from_path("./fixtures/");
     /// ```
     ///
     /// For examples of valid yaml files see the
@@ -744,96 +750,6 @@ impl Config {
 /// It contains all the data that is needed to parse raw
 /// string inputs into commands, and return the appropriate
 /// responses.
-///
-/// Whil you can create this struct manually, this isn't
-/// recommended. Instead, use the State::init(config) function.
-///
-/// An example of what this struct looks like:
-/// ```ignore
-/// State {
-///     input: "",
-///     current_room: 1,
-///     player: Player {
-///         inventory: Storage {
-///             items: vec![],
-///             item_ids: vec![],
-///         },
-///     }
-///     rooms: vec![Room {
-///         id: 1,
-///         name: "room",
-///         description: "a room",
-///         exits: vec![Exits {
-///             direction: Direction::North,
-///             room_id: 2,
-///         }],
-///         stash: Storage {
-///             items: vec![Item {
-///                 id: 1,
-///                 name: "item",
-///                 description: "an item",
-///                 can_pick: true,
-///             }],
-///             item_ids: vec![1],
-///         },
-///         room_events: vec![1],
-///         narrative: 1,
-///         subjects: vec![1],
-///     }],
-///     config: Config {
-///         // These fields are automatically populated
-///         allowed_prepositions: AllowedPrepositions {
-///             prepositions: vec![String::new()],
-///         },
-///         allowed_determiners: AllowedDeterminers {
-///             determiners: vec![String::new()],
-///         },
-///         allowed_movements: AllowedMovements {
-///             movements: vec![String::new()],
-///         },
-///         allowed_directions: AllowedDirections {
-///             directions: vec![Direction::North],
-///         },
-///         allowed_verbs: vec![Verb {
-///                 id: 1,
-///                 names: ["verb"],
-///                 verb_function: "look",
-///             }],
-///         items:  vec![Item {
-///                 id: 1,
-///                 name: "item",
-///                 description: "an item",
-///                 can_pick: true,
-///             }],
-///          subjects: vec![Subject {
-///              id: 1,
-///              name: "subject",
-///              description: "a subject",
-///              default_text: "default text",
-///          }],
-///          narratives: vec![Narrative {
-///              id: 1,
-///              text: "a narrative",
-///          }],
-///          events: vec![Event {
-///              id: 1,
-///              name: "event",
-///              description: "an event",
-///              destination: 1,
-///              narrative: 1,
-///              required_verb: 2,
-///              required_subject: 1,
-///              required_item: 1
-///              completed: false
-///              add_item: 1
-///              remove_old_narrative: false
-///              remove_item: 2
-///              required_events: [1]
-///          }],
-///         intro: "intro",
-///     }
-/// }
-/// ```
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct State {
@@ -857,12 +773,16 @@ impl State {
     /// Takes a config struct and populates the state struct.
     ///
     /// ## Example:
-    /// ```ignore
+    /// ```rust
+    /// # use nightrunner_lib::config::{Config, State};
+    /// # use nightrunner_lib::util::test_helpers::mock_json_data;
+    /// # let json_data = mock_json_data();
     /// // Using yaml config files from a path
-    /// let config = Config::from_path("config/");
+    /// let config1 = Config::from_path("./fixtures/");
+    /// let state1 = State::init(config1);
     /// // or using JSON data from a front-end
-    /// let config = Config::from_json(json_data);
-    /// let state = State::new(config);
+    /// let config2 = Config::from_json(&json_data);
+    /// let state2 = State::init(config2);
     /// ```
     pub fn init(config: Config) -> Rc<RefCell<Self>> {
         let items = &config.items;

@@ -47,31 +47,26 @@ pub enum ActionType {
 /// # Examples:
 ///
 /// * "look subject1"
-/// ```ignore
-/// Action {
+/// ```rust
+/// # use nightrunner_lib::parser::action::Action;
+/// # use nightrunner_lib::config::{Verb, Subject, VerbFunction};
+/// let action_look = Action {
 ///     verb: Some(Verb {
 ///         id: 1,
-///         names: ["look"],
+///         names: vec!["look".to_string()],
 ///         verb_function: VerbFunction::Look
 ///     }),
 ///     subject: Some(Subject {
 ///         id: 1,
-///         name: "subject1",
-///         description: "some verb text"
+///         name: "subject1".to_string(),
+///         description: "some verb text".to_string(),
+///         default_text: "default text".to_string(),
 ///     }),
 ///     item: None,
 ///     movement: None,
-/// }
-/// ```
-///
-/// * "south"
-/// ```ignore
-/// Action {
-///     verb: None,
-///     subject: None,
-///     item: None,
-///     movement: Some(Directions::South),
-/// }
+///     command_tokens: vec!["look".to_string(), "subject1".to_string()],
+///     input: "look subject1".to_string(),
+/// };
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

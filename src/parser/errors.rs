@@ -37,11 +37,9 @@ impl Into<RequiredEventNotCompleted> for &Box<dyn std::error::Error> {
 
 /// # Examples
 /// ```rust
-/// use nightrunner_lib::NightRunner;
-/// use nightrunner_lib::NightRunnerBuilder;
+/// use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 /// use nightrunner_lib::parser::errors::InvalidEvent;
-/// use nightrunner_lib::parser::{action::Action, interpreter::{ParsingResult}};
-/// use nightrunner_lib::config::{Verb, VerbFunction, Subject, rooms::Item};
+/// use nightrunner_lib::parser::{action::Action};
 /// let nr = NightRunnerBuilder::new().with_path_for_config("fixtures/").build();
 /// let mut result = nr.parse_input("give item2 to subject2");
 /// let json_result = nr.json_parse_input("give item2 to subject2");

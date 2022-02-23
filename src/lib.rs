@@ -16,19 +16,20 @@
 //!
 //! # Example:
 //! ```rust
-//! use nightrunner_lib::NightRunner;
-//! use nightrunner_lib::NightRunnerBuilder;
+//! use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 //! use nightrunner_lib::util::test_helpers::mock_json_data;
 //! let data = mock_json_data();
-//! let nr = NightRunnerBuilder::new().with_json_data(data).build();
+//! let nr = NightRunnerBuilder::new().with_json_data(&data).build();
 //! let result = nr.parse_input("look");
 //! let json_result = nr.json_parse_input("look");
 //! assert!(result.is_ok());
 //! assert_eq!(result.unwrap(),
-//!     ParsingResult::Look(String::from("first room\n\nHere you see: \nan item1\nan item2\nsubject1"))
+//!     ParsingResult::Look(
+//!         "first room\n\nHere you see: \nan item1\nan item2\nsubject1".to_string()
+//!     )
 //! );
 //! assert_eq!(json_result,
-//!     "{\"ok\":{\"look\":\"first room\\n\\nHere you see: \\nan item1\\nan item2\\nsubject1\"}}".to_string()
+//!     r#"{"messageType":"look","data":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}"#.to_string()
 //! );
 //! ```
 //!
@@ -38,8 +39,8 @@
 use config::{Config, State};
 use parser::interpreter::EventMessage;
 use serde::{Deserialize, Serialize};
-#[cfg(target_arch = "wasm32")]
-use serde::{Deserialize, Serialize};
+// #[cfg(target_arch = "wasm32")]
+// use serde::{Deserialize, Serialize};
 use std::{cell::RefCell, error::Error, rc::Rc};
 use util::parse_room_text;
 /// Module containing the configuration code for this
@@ -61,6 +62,7 @@ pub type NRResult<T> = Result<T, Box<dyn Error>>;
 /// should be used by a front-end to display to the user.
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "messageType", content = "data")]
 pub enum ParsingResult {
     /// Returned when the player sends a command corresponding
     /// to a verb that has VerbFunction::Help as its verb_function.
@@ -106,17 +108,18 @@ pub struct NightRunner {
     state: Rc<RefCell<State>>,
 }
 
-/// You can use this struct to build a NightRunner
+/// You can use this to build a NightRunner
 /// strut. While you can build the NightRunner
-/// struct directly, this struct is much more
-/// ergonomic.
+/// struct directly, using this builder is a
+/// little more convenient.
+///
 /// # Examples:
 /// ```rust
 /// use nightrunner_lib::NightRunnerBuilder;
-/// use nighrunner_lib::util::test_helpers::mock_json_data;
+/// use nightrunner_lib::util::test_helpers::mock_json_data;
 /// let data = mock_json_data();
 /// let path_to_yaml = "fixtures/";
-/// let nr1 = NightRunnerBuilder::new().with_json_data(data);
+/// let nr1 = NightRunnerBuilder::new().with_json_data(&data);
 /// let nr2 = NightRunnerBuilder::new().with_path_for_config(path_to_yaml);
 /// ```
 
@@ -177,7 +180,7 @@ impl NightRunner {
     pub fn json_parse_input(&self, input: &str) -> String {
         let result = parser::parse(self.state.clone(), input);
         let json = match result {
-            Ok(ok) => format!("{{\"ok\":{}}}", serde_json::to_string(&ok).unwrap()),
+            Ok(ok) => serde_json::to_string(&ok).unwrap(),
             Err(err) => format!(
                 "{{\"error\":{}}}",
                 serde_json::to_string(&err.to_string()).unwrap()
@@ -220,7 +223,7 @@ impl NightRunner {
 #[cfg(any(target_arch = "wasm32", doc))]
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "messageType", content = "data")]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 /// When compiling for the web, this struct is used to
 /// serialize the game state to JSON. `messageType` is
 /// the type of the message returned by the library to
@@ -253,6 +256,8 @@ pub enum JsMessage {
     /// Returned when an event is triggered by the player's command. The
     /// returned struct contains the text to be displayed to the player.
     EventSuccess(EventMessage),
+    /// Returned when a parser result isn't applicable to the wasm library
+    NoOp,
 }
 
 #[cfg(any(target_arch = "wasm32", doc))]
@@ -294,6 +299,7 @@ impl NightRunner {
                     ParsingResult::Inventory(msg) => JsMessage::Inventory(msg),
                     ParsingResult::SubjectNoEvent(msg) => JsMessage::SubjectNoEvent(msg),
                     ParsingResult::EventSuccess(event_msg) => JsMessage::EventSuccess(event_msg),
+                    ParsingResult::Quit => JsMessage::NoOp,
                 };
                 Ok(JsValue::from_serde(&message).unwrap())
             }

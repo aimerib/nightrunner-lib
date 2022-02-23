@@ -57,14 +57,6 @@ impl FromIterator<(usize, usize, String)> for TemplateCaptures {
     }
 }
 
-/// For debugging purposes.
-/// ```rust,ignore
-/// let template_capture = TemplateCapture {
-///    start: 0,
-///    end: 3,
-///    text: "test".to_string(),
-/// };
-/// assert_eq!(format!("{}", template_capture), "start: 0, end: 3, text: test");
 impl fmt::Display for TemplateCapture {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -222,18 +214,18 @@ Valid verbs: "
 ///
 /// This function will return a Result wrapping an EventMessage
 /// with the following format:
-/// ```rust,ignore
-/// EventMessage {
-///     message: String,
-///     templated_words: Vec<String>,
-///     message_parts: HashMap<MessagePart, String>,
-/// }
-///
-/// MessagePart {
-///    RoomText,
-///    EventMessages,
-///    Exits
-/// }
+/// ```rust
+/// # use nightrunner_lib::parser::interpreter::{EventMessage, MessageParts};
+/// # use std::collections::HashMap;
+/// let mut message_parts = HashMap::new();
+/// message_parts.insert(MessageParts::RoomText, "some message with highlighted text.".to_string());
+/// message_parts.insert(MessageParts::RoomText, "You now have item1.".to_string());
+/// message_parts.insert(MessageParts::RoomText, "Exits: to the south you see an alley.".to_string());
+/// let event_message = EventMessage {
+///     message: "some message with highlighted text.\nYou now have item1.\nExits: to the south you see an alley.".to_string(),
+///     templated_words: vec!["highlighted".to_string()],
+///     message_parts: message_parts,
+/// };
 /// ```
 /// and the parser will return a respone wrappping this result.
 /// `message_parts` contains the three parts of the message that
