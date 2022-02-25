@@ -8,7 +8,7 @@ use std::collections::HashMap;
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn it_works_with_path_to_configs() {
-    let nr = NightRunnerBuilder::new()
+    let mut nr = NightRunnerBuilder::new()
         .with_path_for_config("fixtures/")
         .build();
 
@@ -31,12 +31,12 @@ fn it_works_with_path_to_configs() {
 fn it_works_with_json_data() {
     use nightrunner_lib::parser::interpreter::EventMessage;
     let data = nightrunner_lib::util::test_helpers::mock_json_data();
-    let nr = NightRunnerBuilder::new().with_json_data(&data).build();
+    let mut nr = NightRunnerBuilder::new().with_json_data(&data).build();
     let mut message_parts = HashMap::new();
 
     message_parts.insert(
         MessageParts::RoomText,
-        "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.".to_string(),
+        "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.".to_string(),
     );
     message_parts.insert(MessageParts::EventText, "".to_string());
     message_parts.insert(
@@ -55,20 +55,20 @@ fn it_works_with_json_data() {
         result.unwrap(),
         ParsingResult::EventSuccess(
                     EventMessage {
-                        message: "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.\n\n\nExits:\nto the north you see first room".to_string(),
-                        templated_words: vec![],
+                        message: "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.\n\n\nExits:\nto the north you see first room".to_string(),
+                        templated_words: vec!["item3".to_string(), "subject2".to_string()],
                         message_parts: message_parts.clone()
                     })
     );
     result = nr.parse_input("look");
     assert_eq!(
         result.unwrap(),
-        ParsingResult::Look("second room\nsubject2".to_string())
+        ParsingResult::Look("second room\n\nHere you see: \nan item3\nsubject2".to_string())
     );
     result = nr.parse_input("talk subject2");
     message_parts.insert(
         MessageParts::RoomText,
-        "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.\n\nthis narrative should be returned along with the text of room 1.".to_string(),
+        "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.\n\nthis narrative should be returned along with the text of room 1.".to_string(),
     );
     message_parts.insert(
         MessageParts::EventText,
@@ -78,8 +78,8 @@ fn it_works_with_json_data() {
         result.unwrap(),
         ParsingResult::EventSuccess(
                     EventMessage {
-                        message: "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.\n\nthis narrative should be returned along with the text of room 1.\n\nYou now have a item2\n\nExits:\nto the north you see first room".to_string(),
-                        templated_words: vec![],
+                        message: "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.\n\nthis narrative should be returned along with the text of room 1.\n\nYou now have a item2\n\nExits:\nto the north you see first room".to_string(),
+                        templated_words: vec!["item3".to_string(), "subject2".to_string()],
                         message_parts: message_parts.clone()
                     })
     );

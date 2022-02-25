@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::iter::FromIterator;
@@ -10,8 +9,7 @@ use serde::{Deserialize, Serialize};
 pub mod test_helpers;
 
 use crate::config::directions::Directions;
-use crate::config::rooms::Item;
-use crate::config::{Player, State};
+use crate::config::{Item, State};
 use crate::parser::errors::{InvalidMovement, InvalidRoom, NoItem, NoRoom};
 use crate::parser::interpreter::{EventMessage, MessageParts};
 use crate::NRResult;
@@ -22,7 +20,7 @@ use crate::ParsingResult;
 /// their corresponding text along with the beginning and end indices of the
 /// template string.
 #[derive(Debug, Clone, PartialEq)]
-pub(self) struct TemplateCapture {
+struct TemplateCapture {
     start: usize,
     end: usize,
     text: String,
@@ -99,9 +97,10 @@ impl IntoIterator for TemplateCaptures {
 /// Otherwise, the item is removed from the room and added to the player's
 /// inventory and a ParsingResult is returned with a message indicating that
 /// the item was taken.
-pub fn player_get_item(state: &mut State, item: Item) -> NRResult<ParsingResult> {
-    let current_room_id = state.current_room;
-    let current_room = state
+pub fn player_get_item(state: &State, item: Item) -> NRResult<(State, ParsingResult)> {
+    let mut new_state = state.clone();
+    let current_room_id = new_state.current_room;
+    let current_room = new_state
         .rooms
         .iter_mut()
         .find(|room| room.id == current_room_id)
@@ -109,9 +108,9 @@ pub fn player_get_item(state: &mut State, item: Item) -> NRResult<ParsingResult>
 
     match current_room.stash.remove_item(item) {
         Ok(item) => {
-            state.player.inventory.add_item(item.clone());
+            new_state.player.inventory.add_item(item.clone());
             let message = format!("\nYou now have a {}\n", item.name);
-            Ok(ParsingResult::NewItem(message))
+            Ok((new_state, ParsingResult::NewItem(message)))
         }
         Err(_) => Err(NoItem.into()),
     }
@@ -120,18 +119,24 @@ pub fn player_get_item(state: &mut State, item: Item) -> NRResult<ParsingResult>
 /// This function is used when the player is given an item.
 /// This function is called by the events parser if the event
 /// indicates that the player should receive an item.
-pub fn player_receive_item(state: &mut State, item: Item) -> String {
-    state.player.inventory.add_item(item.clone());
+pub fn player_receive_item(state: &State, item: Item) -> NRResult<(State, String)> {
+    let mut new_state = state.clone();
+    new_state.player.inventory.add_item(item.clone());
     let item_message = format!("\nYou now have a {}\n", item.name);
-    item_message
+    Ok((new_state, item_message))
 }
 
 /// This function is used to remove an item from the player's inventory
 /// but it won't add the inventory to the room. This is used when the
 /// event indicates that the player should lose an item.
-pub fn player_remove_item(player: &mut Player, item: Item) -> NRResult<String> {
+pub fn player_remove_item(state: &State, item: Item) -> NRResult<(State, String)> {
+    let mut new_state = state.clone();
+    let player = &mut new_state.player;
     let old_item = player.inventory.remove_item(item)?;
-    Ok(format!("\nYou no longer have a {}\n", old_item.name))
+    Ok((
+        new_state,
+        format!("\nYou no longer have a {}\n", old_item.name),
+    ))
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -151,17 +156,17 @@ impl Display for MoveSuccess {
 /// `ParsingError::InvalidMovement(MoveError::NoExit)` is returned.
 /// If the player can move in the direction, then the player's current room
 /// is updated and a `ParsingResult::Movement(MoveSuccess)` is returned.
-pub fn move_to_direction(state: &mut State, direction: Directions) -> NRResult<MoveSuccess> {
-    let mut state_ref = state;
-    let current_room_id = state_ref.current_room;
-    if let Some(current_room) = state_ref
+pub fn move_to_direction(state: &State, direction: Directions) -> NRResult<(State, MoveSuccess)> {
+    let mut new_state = state.clone();
+    let current_room_id = new_state.current_room;
+    if let Some(current_room) = new_state
         .rooms
         .iter_mut()
         .find(|room| room.id == current_room_id)
     {
         if let Ok(room_id) = current_room.can_move(direction) {
-            state_ref.current_room = room_id;
-            Ok(MoveSuccess)
+            new_state.current_room = room_id;
+            Ok((new_state, MoveSuccess))
         } else {
             Err(InvalidMovement.into())
         }
@@ -171,8 +176,8 @@ pub fn move_to_direction(state: &mut State, direction: Directions) -> NRResult<M
 }
 
 /// Displays the help message for the player.
-pub fn display_help(state: &RefCell<State>) -> NRResult<ParsingResult> {
-    let valid_verbs = state.borrow_mut().config.allowed_verbs.clone();
+pub fn display_help(state: &State) -> NRResult<ParsingResult> {
+    let valid_verbs = state.config.allowed_verbs.clone();
     let valid_verbs_string = &valid_verbs
         .iter()
         .map(|verb| verb.names[0].clone())
@@ -230,13 +235,12 @@ Valid verbs: "
 /// front-end, otherwise the message field can be used for simpler
 /// applications.
 pub fn parse_room_text(
-    state: State,
+    state: &State,
     narrative_text: String,
     event_message: String,
     event_id: Option<u16>,
 ) -> NRResult<EventMessage> {
     let current_room = match state
-        .config
         .rooms
         .iter()
         .find(|room| room.id == state.current_room)
@@ -252,20 +256,17 @@ pub fn parse_room_text(
         .iter()
         .map(|item| item.name.clone())
         .collect::<Vec<String>>();
-    let room_items = state
-        .config
+    let room_items = current_room
+        .stash
         .items
         .clone()
         .iter()
-        .filter(|item| current_room.stash.item_ids.contains(&item.id))
         .map(|item| item.name.clone())
         .collect::<Vec<_>>();
-    let room_subjects = state
-        .config
+    let room_subjects = current_room
         .subjects
         .clone()
         .iter()
-        .filter(|subject| current_room.subjects.contains(&subject.id))
         .map(|subject| subject.name.clone())
         .collect::<Vec<_>>();
     let mut event_items = vec![];
@@ -291,21 +292,16 @@ pub fn parse_room_text(
         .exits
         .clone()
         .iter()
-        .map(|exit| {
-            match state
-                .config
-                .rooms
-                .iter()
-                .find(|room| room.id == exit.room_id)
-            {
+        .map(
+            |exit| match state.rooms.iter().find(|room| room.id == exit.room_id) {
                 Some(room) => format!(
                     "to the {} you see {}",
                     exit.direction.clone(),
                     room.description.clone()
                 ),
                 None => String::new(),
-            }
-        })
+            },
+        )
         .collect::<Vec<String>>();
     let exits_string = match exits_vec.len() {
         0 => String::new(),

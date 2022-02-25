@@ -5,6 +5,7 @@
 //! All errors have Display implemented for them,
 //! so they can be easily serialized to a string.
 
+use rand::Rng;
 use std::error;
 use std::fmt;
 
@@ -40,9 +41,22 @@ impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for RequiredEvent
 /// use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 /// use nightrunner_lib::parser::errors::InvalidEvent;
 /// use nightrunner_lib::parser::{action::Action};
-/// let nr = NightRunnerBuilder::new().with_path_for_config("fixtures/").build();
+/// let mut nr = NightRunnerBuilder::new().with_path_for_config("fixtures/").build();
 /// let mut result = nr.parse_input("give item2 to subject2");
 /// let json_result = nr.json_parse_input("give item2 to subject2");
+/// let json_value: serde_json::Value = serde_json::from_str(&json_result).unwrap();
+/// let error_message = json_value
+///     .get("error")
+///     .and_then(|v| v.as_str())
+///     .expect("Expected an 'error' field with a valid error message");
+/// let possible_error_messages = [
+///     "Perhaps you should try something else.",
+///     "Maybe something else needs to be done first.",
+///     "You can't do that.",
+///     "I don't understand that.",
+///     "I don't know how to do that.",
+///     "I would do anything for love, but I won't do that.",
+/// ];
 /// // There is no event for player giving item2 to subject2
 /// // so we expect an error. InvalidEvent should be used to
 /// // indicate that the event is not valid, and how to handle
@@ -52,25 +66,28 @@ impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for RequiredEvent
 /// // For convenience, this error wraps the action as it was
 /// // interpreted by the parser from the input. This is useful
 /// // when writing custom logic for the front-end.
-/// assert_eq!(
-///     result.unwrap_err().to_string(),
-///     InvalidEvent.to_string()
-/// );
-/// result = nr.parse_input("give item2 to subject2");
-/// assert_eq!(
-///   result.unwrap_err().to_string(),
-///   "The event is not valid.".to_string()
-/// );
-/// assert_eq!(
-///    json_result,
-///    r#"{"error":"The event is not valid."}"#
-/// );
+/// assert!(result.is_err());
+/// assert!(possible_error_messages.contains(&result.unwrap_err().to_string().as_str()));
+/// assert!(possible_error_messages.contains(&error_message));
 /// ```
 #[derive(Debug, Clone)]
 pub struct InvalidEvent;
 impl std::fmt::Display for InvalidEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "The event is not valid.")
+        let mut rng = rand::thread_rng();
+        let error_messages = [
+            "Perhaps you should try something else.",
+            "Maybe something else needs to be done first.",
+            "You can't do that.",
+            "I don't understand that.",
+            "I don't know how to do that.",
+            "I would do anything for love, but I won't do that.",
+        ];
+        write!(
+            f,
+            "{}",
+            error_messages[rng.gen_range(0..error_messages.len())]
+        )
     }
 }
 

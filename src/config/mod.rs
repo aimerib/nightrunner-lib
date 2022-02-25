@@ -4,15 +4,16 @@ pub(crate) mod movements;
 pub(crate) mod prepositions;
 pub(crate) mod rooms;
 
+use crate::parser::errors::{InvalidRoom, InvalidSubject, NoItem};
+use crate::NRResult;
+
 use self::determiners::AllowedDeterminers;
 use self::directions::AllowedDirections;
 use self::movements::AllowedMovements;
 use self::prepositions::AllowedPrepositions;
-use self::rooms::{Item, Room, Storage};
+use self::rooms::{Room, RoomBlueprint};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 /// This struct holds the texts used to display the story
 /// in the game. These narratives are used to display
@@ -88,7 +89,7 @@ pub struct Verb {
     /// The function that the verb serves. Since some verbs are reserved
     /// for specific functions, this field is used to determine what
     /// function the verb serves, and this allows verbs to be named
-    /// anything. For the possible functions see the [VerbFunction](VerbFunction) enum.
+    /// anything. For the possible functions see the [VerbFunction] enum.
     pub verb_function: VerbFunction,
 }
 impl std::fmt::Display for Verb {
@@ -206,11 +207,10 @@ impl std::fmt::Display for Subject {
 /// let event = Event {
 ///   id: 1,
 ///   location: 1,
-///   name: "Talking to subject 1".to_string(),
+///   name: "Talking to subject 2".to_string(),
 ///   description: "This event happens when you talk to subject 2.".to_string(),
 ///   destination: None,
 ///   narrative: Some(2),
-///   // here verb id 3 has to be marked with VerbFunction::Talk
 ///   required_verb: Some(3),
 ///   required_subject: Some(2),
 ///   required_item: None,
@@ -219,6 +219,10 @@ impl std::fmt::Display for Subject {
 ///   remove_old_narrative: false,
 ///   remove_item: None,
 ///   required_events: Vec::new(),
+///   add_subject: None,
+///   move_subject_to_location: None,
+///   narrative_after: None,
+///   remove_subject: false,
 /// };
 /// ```
 ///
@@ -244,6 +248,10 @@ impl std::fmt::Display for Subject {
 ///   // here item id 3 would be removed after the event is completed
 ///   remove_item: Some(3),
 ///   required_events: Vec::new(),
+///   add_subject: None,
+///   move_subject_to_location: None,
+///   narrative_after: None,
+///   remove_subject: false,
 /// };
 /// ```
 
@@ -279,12 +287,13 @@ pub struct Event {
     /// If the event adds an item to the inventory,
     /// this is the item id.
     pub add_item: Option<u16>,
-    /// If the event narrative is supposed to replace
-    /// the text currently displayed on the screen,
-    /// this needs to be set to true.
-    /// This is useful to avoid a lot of screen scrolling
-    /// when the event narrative is long.
+    /// If the room narrative should be different after
+    /// this event, this should be true. Default is false.
+    #[serde(default)]
     pub remove_old_narrative: bool,
+    /// If a new narrative should be displayed after this
+    /// event, this should be the id of the new narrative.
+    pub narrative_after: Option<u16>,
     /// If the event removes an item from the inventory,
     /// this is the item id.
     pub remove_item: Option<u16>,
@@ -292,6 +301,60 @@ pub struct Event {
     /// this is a list of event ids that need to be completed
     /// before this event can be triggered.
     pub required_events: Vec<u16>,
+    /// If the event brings a new subject to the room, this is
+    /// the subject id.
+    pub add_subject: Option<u16>,
+    /// If the event removes a subject from the room, this needs
+    /// to be true.
+    #[serde(default)]
+    pub remove_subject: bool,
+    /// If in addition to removing the subject from the room,
+    /// the event also moves the subject to a different room,
+    /// this is the new room id.
+    pub move_subject_to_location: Option<u16>,
+}
+
+impl Event {
+    /// Checks if a task is completed.
+    ///
+    /// This function returns true if the task is completed, and false otherwise.
+    pub fn is_completed(&self) -> bool {
+        self.completed
+    }
+    /// Marks an event as completed.
+    ///
+    /// This function sets the `completed` field of the event to `true`.
+    pub fn complete(&mut self) {
+        self.completed = true;
+    }
+}
+
+/// This struct represents an item in the game.
+/// It contains the name of the item, the description
+/// and whether or not the item can be picked up.
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub struct Item {
+    /// The id of the item used when referencing the item.
+    pub id: u16,
+    /// The name of the item.
+    pub name: String,
+    /// The description of the item.
+    /// This is used when the player looks at
+    /// the item.
+    pub description: String,
+    /// Whether or not the item can be picked up.
+    /// If this is true then the item can be
+    /// picked up by the player. Most of the times
+    /// if an item can't be picked up you will
+    /// want to use a subject instead.
+    pub can_pick: bool,
+}
+
+impl std::fmt::Display for Item {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", &self.name[..])
+    }
 }
 
 /// This struct holds the data deserialized from JSON.
@@ -305,7 +368,7 @@ pub struct Event {
 struct ConfigData {
     items: Vec<Item>,
     narratives: Vec<Narrative>,
-    rooms: Vec<Room>,
+    room_blueprints: Vec<RoomBlueprint>,
     subjects: Vec<Subject>,
     events: Vec<Event>,
     intro: String,
@@ -352,8 +415,9 @@ pub struct Config {
     pub events: Vec<Event>,
     /// The intro text to be displayed when the game starts.
     pub intro: String,
-    /// All the possible rooms in the game.
-    pub rooms: Vec<Room>,
+    pub(crate) room_blueprints: Vec<RoomBlueprint>,
+    // /// All the possible rooms in the game.
+    // pub rooms: Vec<Room>,
 }
 
 impl Default for Config {
@@ -375,7 +439,7 @@ impl Default for Config {
             items: Vec::new(),
             subjects: Vec::new(),
             narratives: Vec::new(),
-            rooms: Vec::new(),
+            room_blueprints: Vec::new(),
             events: Vec::new(),
             intro: String::new(),
         }
@@ -589,7 +653,7 @@ impl Config {
     ///     }
     ///   ],
     ///   "intro": "text",
-    ///   "rooms": [
+    ///   "room_blueprints": [
     ///     {
     ///       "id": 1,
     ///       "name": "room 1",
@@ -600,18 +664,12 @@ impl Config {
     ///           "direction": "south"
     ///         }
     ///       ],
-    ///       "stash": {
-    ///         "items": [],
-    ///         "item_ids": [
-    ///           1,
-    ///           2
-    ///         ]
-    ///       },
-    ///       "room_events": [
-    ///         1, 4, 2
+    ///       "item_ids": [
+    ///         1,
+    ///         2
     ///       ],
     ///       "narrative": 1,
-    ///       "subjects": [
+    ///       "subject_ids": [
     ///         1
     ///       ]
     ///     },
@@ -625,13 +683,9 @@ impl Config {
     ///           "direction": "north"
     ///         }
     ///       ],
-    ///       "stash": {
-    ///         "items": [],
-    ///         "item_ids": []
-    ///       },
-    ///       "room_events": [],
+    ///       "item_ids": [],
     ///       "narrative": 2,
-    ///       "subjects": []
+    ///       "subject_ids": []
     ///     }
     ///   ]
     /// }"#;
@@ -643,9 +697,9 @@ impl Config {
         let mut subjects = config_data.subjects;
         let mut narratives = config_data.narratives;
         let mut events = config_data.events;
-        let mut rooms = config_data.rooms;
+        let mut room_blueprints = config_data.room_blueprints;
 
-        rooms.sort_by(|a, b| a.id.cmp(&b.id));
+        room_blueprints.sort_by(|a, b| a.id.cmp(&b.id));
         events.sort_by(|a, b| a.id.cmp(&b.id));
         verbs.sort();
         items.sort();
@@ -663,7 +717,7 @@ impl Config {
             narratives,
             events,
             intro: config_data.intro,
-            rooms,
+            room_blueprints,
         }
     }
     /// # Config::init_yaml
@@ -716,8 +770,9 @@ impl Config {
         let mut items: Vec<Item> = serde_yaml::from_str(&items_config[..]).unwrap();
         items.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut rooms: Vec<Room> = serde_yaml::from_str(&rooms_config[..]).unwrap();
-        rooms.sort_by(|a, b| a.id.cmp(&b.id));
+        let mut room_blueprints: Vec<RoomBlueprint> =
+            serde_yaml::from_str(&rooms_config[..]).unwrap();
+        room_blueprints.sort_by(|a, b| a.id.cmp(&b.id));
 
         let mut events: Vec<Event> = serde_yaml::from_str(&events_config[..]).unwrap();
         events.sort_by(|a, b| a.id.cmp(&b.id));
@@ -741,7 +796,7 @@ impl Config {
             narratives,
             events,
             intro,
-            rooms,
+            room_blueprints,
         }
     }
 }
@@ -784,35 +839,198 @@ impl State {
     /// let config2 = Config::from_json(&json_data);
     /// let state2 = State::init(config2);
     /// ```
-    pub fn init(config: Config) -> Rc<RefCell<Self>> {
+    pub fn init(config: Config) -> Self {
         let items = &config.items;
-        let mut rooms = config.clone().rooms;
-        for room in &mut rooms {
-            for room_item_id in &mut room.stash.item_ids {
-                if items.iter().any(|i| i.id == *room_item_id) {
-                    room.stash.items.push(
-                        items
-                            .iter()
-                            .find(|i| i.id == *room_item_id)
-                            .unwrap()
-                            .to_owned(),
-                    );
-                }
-            }
-        }
-        let state = Self {
+        let subjects = &config.subjects;
+        let events = &config.events;
+        // let rooms = config
+        //     .room_blueprints
+        //     .iter()
+        //     .cloned()
+        //     .map(|blueprint| blueprint.build(events, items, subjects))
+        //     .collect::<Vec<Room>>();
+        let room_blueprints = &config.room_blueprints;
+        let rooms = Room::build_rooms(room_blueprints, events, items, subjects);
+        // .iter()
+        // .map(|room_blueprint| {
+        //     let mut room = Room {
+        //         id: room_blueprint.id,
+        //         name: room_blueprint.name.clone(),
+        //         description: room_blueprint.description.clone(),
+        //         exits: room_blueprint.exits.clone(),
+        //         narrative: room_blueprint.narrative.clone(),
+        //         subjects: vec![],
+        //         stash: Storage::default(),
+        //         events: vec![],
+        //     };
+        //     for item_id in &room_blueprint.item_ids {
+        //         items.iter().find(|item| item.id == *item_id).map(|item| {
+        //             room.stash.add_item(item.clone());
+        //         });
+        //     }
+        //     for subject_id in &room_blueprint.subject_ids {
+        //         subjects
+        //             .iter()
+        //             .find(|subject| subject.id == *subject_id)
+        //             .map(|subject| {
+        //                 room.subjects.push(subject.clone());
+        //             });
+        //     }
+        //     for event_id in &room_blueprint.room_events {
+        //         events
+        //             .iter()
+        //             .find(|event| event.id == *event_id)
+        //             .map(|event| {
+        //                 room.events.push(event.clone());
+        //             });
+        //     }
+        //     room
+        // })
+        // .collect();
+        // for blueprint in &mut room_blueprints {
+        //     for room_item_id in &mut blueprint.item_ids {
+        //         if items.iter().any(|i| i.id == *room_item_id) {
+        //             room.stash.items.push(
+        //                 items
+        //                     .iter()
+        //                     .find(|i| i.id == *room_item_id)
+        //                     .unwrap()
+        //                     .to_owned(),
+        //             );
+        //         }
+        //     }
+        // }
+        // let state =
+        Self {
             input: String::new(),
             current_room: 1,
             player: Player {
-                inventory: Storage {
-                    items: vec![],
-                    item_ids: vec![],
-                },
+                inventory: Storage::default(),
             },
             rooms,
             config,
-        };
-        Rc::new(RefCell::new(state))
+        }
+        // Rc::new(RefCell::new(state))
+    }
+    /// Returns a clone of the current narrative for the current room.
+    pub fn get_narrative(&self) -> Narrative {
+        let room = self
+            .rooms
+            .iter()
+            .find(|r| r.id == self.current_room)
+            .unwrap();
+        let narrative = self
+            .config
+            .narratives
+            .iter()
+            .find(|n| n.id == room.narrative)
+            .unwrap();
+        narrative.clone()
+    }
+    /// Sets the current room's narrative
+    pub fn set_narrative(&mut self, narrative_id: u16) {
+        let room = self
+            .rooms
+            .iter_mut()
+            .find(|r| r.id == self.current_room)
+            .unwrap();
+        room.narrative = narrative_id;
+    }
+    /// Checks if an event is completed.
+    pub fn is_event_completed(&self, event_id: u16) -> bool {
+        for room in self.rooms.iter() {
+            if let Some(event) = room.events.iter().find(|e| e.id == event_id) {
+                return event.completed;
+            }
+        }
+        false
+        // self.config
+        //     .events
+        //     .iter()
+        //     .find(|e| e.id == event_id)
+        //     .map(|e| e.completed)
+        //     .unwrap_or(false)
+    }
+    /// Marks an event as completed.
+    pub fn complete_event(&mut self, event_id: u16) {
+        for room in self.rooms.iter_mut() {
+            if let Some(event) = room.events.iter_mut().find(|e| e.id == event_id) {
+                event.completed = true;
+            }
+        }
+    }
+    /// Moves a subject to a different room.
+    pub fn move_subject(&mut self, subject_id: u16, location: u16) -> NRResult<()> {
+        self.remove_subject(subject_id)?;
+        let subject = self
+            .config
+            .subjects
+            .iter()
+            .find(|s| s.id == subject_id)
+            .ok_or(InvalidSubject)?;
+        self.rooms
+            .iter_mut()
+            .find(|r| r.id == location)
+            .ok_or(InvalidRoom)?
+            .add_subject(subject.clone());
+        Ok(())
+    }
+    /// Removes a subject from the current room.
+    pub fn remove_subject(&mut self, subject_id: u16) -> NRResult<()> {
+        let current_room = self
+            .rooms
+            .iter_mut()
+            .find(|r| r.id == self.current_room)
+            .ok_or(InvalidRoom)?;
+        current_room.remove_subject(subject_id);
+        Ok(())
+    }
+    /// Adds a subject to the current room.
+    pub fn add_subject(&mut self, subject: Subject) -> NRResult<()> {
+        let current_room = self
+            .rooms
+            .iter_mut()
+            .find(|r| r.id == self.current_room)
+            .ok_or(InvalidRoom)?;
+        current_room.add_subject(subject);
+        Ok(())
+    }
+}
+
+/// This struct represents the storage for both the player
+/// and the room and implements functions to add and remove
+/// items from the storage.
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub struct Storage {
+    /// This field contains the list of actual
+    /// items available in the storage struct
+    /// and gets populated during the state
+    /// initialization based on the item_ids field
+    pub items: Vec<Item>,
+    // /// The list of item ids that are currently
+    // /// available in storage. Only used for the
+    // /// configuration data.
+    // pub item_ids: Vec<u16>,
+}
+
+impl Storage {
+    /// This function adds an item to the storage.
+    pub fn add_item(&mut self, item: Item) {
+        self.items.push(item);
+    }
+    /// This function removes an item from the storage
+    /// if availabl and returns the item removed. This
+    /// is so that the same item can be added to another
+    /// storage, for example when the user drops an item
+    /// from their inventory or picks up an item from
+    /// the room.
+    pub fn remove_item(&mut self, item: Item) -> NRResult<Item> {
+        let target_item = self.items.iter().position(|i| i.name == item.name);
+        match target_item {
+            Some(item_index) => Ok(self.items.remove(item_index)),
+            None => Err(NoItem.into()),
+        }
     }
 }
 

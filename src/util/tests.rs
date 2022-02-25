@@ -1,4 +1,8 @@
+use std::path::Path;
+
 use regex::Regex;
+
+use self::test_helpers::export_json_data;
 
 use super::*;
 use crate::config::{directions::Directions, Config, State};
@@ -9,17 +13,17 @@ use pretty_assertions::assert_eq;
 fn player_takes_item() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let item = state.borrow().config.items[0].clone();
+    let item = state.config.items[0].clone();
     let item_not_in_room = Item {
         id: 2,
         name: "not in room".to_string(),
         description: "not in room".to_string(),
         can_pick: true,
     };
-    let result1 = player_get_item(&mut state.borrow_mut(), item);
-    let result2 = player_get_item(&mut state.borrow_mut(), item_not_in_room);
+    let result1 = player_get_item(&state, item);
+    let result2 = player_get_item(&state, item_not_in_room);
     assert_eq!(
-        result1.unwrap(),
+        result1.unwrap().1,
         ParsingResult::NewItem("\nYou now have a item1\n".to_string())
     );
     assert_eq!(result2.unwrap_err().to_string(), NoItem.to_string());
@@ -28,55 +32,47 @@ fn player_takes_item() {
 fn player_receives_item() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let item = state.borrow().config.items[0].clone();
+    let item = state.config.items[0].clone();
     let item_not_in_room = Item {
         id: 2,
         name: "not in room".to_string(),
         description: "not in room".to_string(),
         can_pick: true,
     };
-    let result1 = player_receive_item(&mut *state.borrow_mut(), item);
-    let result2 = player_receive_item(&mut *state.borrow_mut(), item_not_in_room);
-    assert_eq!(result1, "\nYou now have a item1\n");
-    assert_eq!(result2, "\nYou now have a not in room\n");
+    let result1 = player_receive_item(&state, item);
+    let result2 = player_receive_item(&state, item_not_in_room);
+    assert_eq!(result1.unwrap().1, "\nYou now have a item1\n");
+    assert_eq!(result2.unwrap().1, "\nYou now have a not in room\n");
 }
 #[test]
 fn it_removes_player_item() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let item = state.borrow().config.items[0].clone();
-    player_receive_item(&mut state.borrow_mut(), item.clone());
+    let item = state.config.items[0].clone();
+    let (new_state, _) = player_receive_item(&state, item.clone()).unwrap();
     let item_not_with_player = Item {
         id: 2,
         name: "not in room".to_string(),
         description: "not in room".to_string(),
         can_pick: true,
     };
-    let player = &mut state.borrow_mut().player;
-    let result1 = player_remove_item(player, item);
-    let result2 = player_remove_item(player, item_not_with_player);
-    assert_eq!(result1.unwrap(), "\nYou no longer have a item1\n");
+    let result1 = player_remove_item(&new_state, item);
+    let result2 = player_remove_item(&new_state, item_not_with_player);
+    assert_eq!(result1.unwrap().1, "\nYou no longer have a item1\n");
     assert_eq!(result2.unwrap_err().to_string(), NoItem.to_string());
 }
 #[test]
 fn it_moves_player() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let state_ref = &mut *state.borrow_mut();
-    let result1 = move_to_direction(state_ref, Directions::North);
-    let result2 = move_to_direction(state_ref, Directions::South);
-    let result3 = move_to_direction(state_ref, Directions::East);
-    let result4 = move_to_direction(state_ref, Directions::North);
-    assert_eq!(
-        result1.unwrap_err().to_string(),
-        InvalidMovement.to_string()
-    );
-    assert_eq!(result2.unwrap(), MoveSuccess);
-    assert_eq!(
-        result3.unwrap_err().to_string(),
-        InvalidMovement.to_string()
-    );
-    assert_eq!(result4.unwrap(), MoveSuccess);
+    let result1 = move_to_direction(&state, Directions::North).unwrap_err();
+    let (new_state, result2) = move_to_direction(&state, Directions::South).unwrap();
+    let result3 = move_to_direction(&new_state, Directions::East).unwrap_err();
+    let (_, result4) = move_to_direction(&new_state, Directions::North).unwrap();
+    assert_eq!(result1.to_string(), InvalidMovement.to_string());
+    assert_eq!(result2, MoveSuccess);
+    assert_eq!(result3.to_string(), InvalidMovement.to_string());
+    assert_eq!(result4, MoveSuccess);
 }
 #[test]
 fn it_parses_templated_narratives() {
@@ -84,14 +80,12 @@ fn it_parses_templated_narratives() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
     let room = state
-        .borrow()
         .rooms
         .iter()
         .find(|room| room.id == 2)
         .unwrap()
         .clone();
     let narrative = state
-        .borrow()
         .config
         .narratives
         .iter()
@@ -120,27 +114,27 @@ fn it_parses_templated_narratives() {
     let capture3 = captures[2].clone();
     assert_eq!(
         capture1.captures[0].to_string(),
-        "start: 45, end: 52, text: item1"
+        "start: 45, end: 52, text: item3"
     );
     assert_eq!(
         TemplateCapture {
             start: 45,
             end: 52,
-            text: "item1".to_string(),
+            text: "item3".to_string(),
         },
         capture1.captures[0],
     );
     assert_eq!(capture2.captures.len(), 0);
     assert_eq!(
         capture3.captures[0].to_string(),
-        "start: 52, end: 62, text: subject1"
+        "start: 52, end: 62, text: subject2"
     );
     assert_eq!(
         TemplateCaptures {
             captures: vec![TemplateCapture {
                 start: 52,
                 end: 62,
-                text: "subject1".to_string(),
+                text: "subject2".to_string(),
             },],
         },
         capture3,
@@ -150,7 +144,7 @@ fn it_parses_templated_narratives() {
 #[test]
 fn it_parses_room_text() {
     let config = Config::from_path("fixtures/");
-    let state = State::init(config);
+    let mut state = State::init(config);
     let narrative_text = String::from(
         "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}.",
     );
@@ -163,12 +157,7 @@ fn it_parses_room_text() {
     );
     // with either an item or subject in the room, it returns the templated text along with the
     // narrative provided and the exits information for display.
-    let mut result = parse_room_text(
-        state.borrow().clone(),
-        narrative_text.clone(),
-        "".to_string(),
-        None,
-    );
+    let mut result = parse_room_text(&state, narrative_text.clone(), "".to_string(), None);
     assert_eq!(
         result.unwrap(),
         EventMessage {
@@ -180,9 +169,9 @@ fn it_parses_room_text() {
         }
     );
     // room two doesn't contain the items templated in the narrative
-    state.borrow_mut().current_room = 2;
+    state.current_room = 2;
     // so here we expect it to return just the narrative and the exits information for display.
-    result = parse_room_text(state.borrow().clone(), narrative_text, "".to_string(), None);
+    result = parse_room_text(&state, narrative_text, "".to_string(), None);
     message_parts.insert(
         MessageParts::Exits,
         String::from("Exits:\nto the north you see first room"),
@@ -197,4 +186,12 @@ fn it_parses_room_text() {
             message_parts
         }
     );
+}
+#[test]
+#[ignore]
+fn it_generates_json_file_and_clean_up() {
+    export_json_data();
+    let path = Path::new("test.json");
+    // check if the file exists
+    assert_eq!(path.exists(), true);
 }

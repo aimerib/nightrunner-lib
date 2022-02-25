@@ -7,3 +7,7 @@
   name: item2
   description: item 2 description
   can_pick: true
+- id: 3
+  name: item3
+  description: item 3 description
+  can_pick: true

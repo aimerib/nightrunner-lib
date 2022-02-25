@@ -1,7 +1,61 @@
 use super::*;
-use crate::{config::directions::Directions, config::rooms::Room};
+use crate::{
+    config::directions::Directions,
+    config::{rooms::Room, Item},
+};
 #[cfg(test)]
 use pretty_assertions::assert_eq;
+
+#[test]
+fn it_builds_a_room() {
+    let bp = RoomBlueprint {
+        id: 1,
+        name: "Test Room".to_string(),
+        description: "This is a test room.".to_string(),
+        exits: vec![Exits {
+            direction: Directions::North,
+            room_id: 2,
+        }],
+        item_ids: vec![1],
+        narrative: 1,
+        subject_ids: vec![],
+    };
+    let rooms = Room::build_rooms(
+        &[bp],
+        &[],
+        &[Item {
+            id: 1,
+            name: "item1".to_string(),
+            description: "item1".to_string(),
+            can_pick: false,
+        }],
+        &[],
+    );
+    let manual_room = Room {
+        id: 1,
+        name: "Test Room".to_owned(),
+        description: "This is a test room.".to_owned(),
+        exits: vec![Exits {
+            room_id: 2,
+            direction: Directions::North,
+        }],
+        stash: Storage {
+            items: vec![Item {
+                id: 1,
+                name: "item1".to_string(),
+                description: "item1".to_string(),
+                can_pick: false,
+            }],
+        },
+        events: vec![],
+        narrative: 1,
+        subjects: vec![],
+    };
+    assert_eq!(1, rooms.len());
+    assert_eq!(manual_room, rooms[0]);
+    assert_eq!("This is a test room.", rooms[0].description);
+    assert!(rooms[0].stash.items[0].name == "item1");
+}
 
 #[test]
 fn it_can_move() {
@@ -13,11 +67,8 @@ fn it_can_move() {
             room_id: 2,
             direction: Directions::North,
         }],
-        stash: Storage {
-            items: vec![],
-            item_ids: vec![],
-        },
-        room_events: vec![],
+        stash: Storage { items: vec![] },
+        events: vec![],
         narrative: 1,
         subjects: vec![],
     };
@@ -34,11 +85,8 @@ fn it_adds_item() {
             room_id: 2,
             direction: Directions::North,
         }],
-        stash: Storage {
-            items: vec![],
-            item_ids: vec![],
-        },
-        room_events: vec![],
+        stash: Storage { items: vec![] },
+        events: vec![],
         narrative: 1,
         subjects: vec![],
     };
@@ -70,9 +118,8 @@ fn it_removes_item() {
         }],
         stash: Storage {
             items: vec![item.clone()],
-            item_ids: vec![],
         },
-        room_events: vec![],
+        events: vec![],
         narrative: 1,
         subjects: vec![],
     };
@@ -85,4 +132,55 @@ fn it_removes_item() {
         remove_error.unwrap_err().to_string(),
         "You're not carrying that.".to_string()
     );
+}
+
+#[test]
+fn it_adds_subject() {
+    let subject = Subject {
+        id: 1,
+        name: "text".to_owned(),
+        description: "text".to_owned(),
+        default_text: "default text".to_owned(),
+    };
+    let mut room = Room {
+        id: 1,
+        name: "text".to_owned(),
+        description: "text".to_owned(),
+        exits: vec![Exits {
+            room_id: 2,
+            direction: Directions::North,
+        }],
+        stash: Storage { items: vec![] },
+        events: vec![],
+        narrative: 1,
+        subjects: vec![],
+    };
+    room.add_subject(subject);
+    assert!(!room.subjects.is_empty());
+    assert_eq!(room.subjects[0].name, "text");
+}
+
+#[test]
+fn it_removes_subject() {
+    let mut room = Room {
+        id: 1,
+        name: "text".to_owned(),
+        description: "text".to_owned(),
+        exits: vec![Exits {
+            room_id: 2,
+            direction: Directions::North,
+        }],
+        stash: Storage { items: vec![] },
+        events: vec![],
+        narrative: 1,
+        subjects: vec![Subject {
+            id: 1,
+            name: "text".to_owned(),
+            description: "text".to_owned(),
+            default_text: "default text".to_owned(),
+        }],
+    };
+    assert!(!room.subjects.is_empty());
+    room.remove_subject(1);
+    assert!(room.subjects.is_empty());
 }

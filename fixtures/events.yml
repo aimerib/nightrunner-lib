@@ -13,6 +13,9 @@
   remove_old_narrative: false
   remove_item: ~
   required_events: []
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
 - id: 2
   name: event 2
   description: hug subject 2 - requires event 4
@@ -27,6 +30,9 @@
   remove_old_narrative: true
   remove_item: ~
   required_events: [4]
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
 - id: 3
   name: text
   description: text
@@ -41,6 +47,9 @@
   remove_old_narrative: true
   remove_item: ~
   required_events: [2]
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
 - id: 4
   name: event 4
   description: talk to subject 1
@@ -55,6 +64,9 @@
   remove_old_narrative: true
   remove_item: ~
   required_events: []
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
 - id: 5
   name: event 5
   description: gives item 2 to player when talking to subject2
@@ -69,6 +81,9 @@
   remove_old_narrative: false
   remove_item: ~
   required_events: []
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
 - id: 6
   name: event 6
   description: gives item 2 to subject1 when talking to subject1 after event 5
@@ -83,3 +98,6 @@
   remove_old_narrative: false
   remove_item: 2
   required_events: [5]
+  add_subject: ~
+  remove_subject: false
+  move_subject_to_location: ~
