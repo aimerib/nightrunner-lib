@@ -120,11 +120,12 @@ fn handle_verb_item(state_ref: &Rc<RefCell<State>>, action: Action) -> NRResult<
         None => return Err(InvalidVerb.into()),
     };
     if allowed_verbs.contains(&verb) {
-        match action.item {
+        match action.item.clone() {
             Some(item) => match &verb.verb_function {
                 VerbFunction::Take => pick_item(&mut *state_ref.borrow_mut(), item),
                 VerbFunction::Drop => drop_item(&mut *state_ref.borrow_mut(), item),
                 VerbFunction::Look => look_item(&*state_ref.borrow(), item),
+                VerbFunction::Normal => handle_event(&mut *state_ref.borrow_mut(), action),
                 _ => Err(InvalidVerb.into()),
             },
             None => Err(NoItem.into()),
@@ -218,7 +219,8 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
     // if action verb and subject exists, process action.
     // every event requires at least one verb and one subject
     // some events might also require an item.
-    else if let (Some(verb), Some(subject), None) = (action.verb, subject.clone(), inventory_item)
+    else if let (Some(verb), Some(subject), None) =
+        (action.verb.clone(), subject.clone(), inventory_item.clone())
     {
         // each room has a list of events. the event_id is derived from the list
         // of events in a room. If the action verb matches the required verb for the event
@@ -245,6 +247,34 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
                     && event.required_item.is_none()
             })
             .collect::<Vec<&u16>>();
+    } else if let (Some(verb), None, Some(inventory_item)) =
+        (action.verb, subject.clone(), inventory_item)
+    {
+        // each room has a list of events. the event_id is derived from the list
+        // of events in a room. If the action verb matches the required verb for the event
+        // and the action subject matches the event subject, we return an Option with the id
+        // of the event or None
+        event_ids = current_room
+            .room_events
+            .iter()
+            .filter(|event_id| {
+                let event = match state_events.iter().find(|event| event.id == **event_id) {
+                    Some(event) => event,
+                    None => return false,
+                };
+                let required_verb_id = match event.required_verb {
+                    Some(verb) => verb,
+                    None => return false,
+                };
+                let required_item_id = match event.required_item {
+                    Some(item_id) => item_id,
+                    None => return false,
+                };
+                required_verb_id == verb.id
+                    && required_item_id == inventory_item.id
+                    && event.required_subject.is_none()
+            })
+            .collect::<Vec<&u16>>();
     }
 
     // We only want to continue from this point on if we have a valid event_id
@@ -267,6 +297,8 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
                 }
             }
         }
+    } else if let Some(subject) = subject {
+        return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
     } else {
         return Err(InvalidEvent.into());
     };

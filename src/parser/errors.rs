@@ -5,6 +5,7 @@
 //! All errors have Display implemented for them,
 //! so they can be easily serialized to a string.
 
+use rand::Rng;
 use std::error;
 use std::fmt;
 
@@ -59,18 +60,31 @@ impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for RequiredEvent
 /// result = nr.parse_input("give item2 to subject2");
 /// assert_eq!(
 ///   result.unwrap_err().to_string(),
-///   "The event is not valid.".to_string()
+///   "I can't do that.".to_string()
 /// );
 /// assert_eq!(
 ///    json_result,
-///    r#"{"error":"The event is not valid."}"#
+///    r#"{"error":"I can't do that."}"#
 /// );
 /// ```
 #[derive(Debug, Clone)]
 pub struct InvalidEvent;
 impl std::fmt::Display for InvalidEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "The event is not valid.")
+        let mut rng = rand::thread_rng();
+        let error_messages = [
+            "Perhaps you should try something else.",
+            "Maybe something else needs to be done first.",
+            "You can't do that.",
+            "I don't understand that.",
+            "I don't know how to do that.",
+            "I would do anything for love, but I won't do that.",
+        ];
+        write!(
+            f,
+            "{}",
+            error_messages[rng.gen_range(0..error_messages.len())]
+        )
     }
 }
 
