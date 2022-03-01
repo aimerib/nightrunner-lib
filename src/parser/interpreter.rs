@@ -2,9 +2,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::config::{directions::Directions, Subject};
-use crate::config::{rooms::Item, State};
-use crate::config::{Narrative, VerbFunction};
+use crate::config::directions::Directions;
+use crate::config::{Event, Item, State, Subject, VerbFunction};
 use crate::parser::action::{Action, ActionType};
 use crate::parser::errors::*;
 use crate::util::{
@@ -63,7 +62,7 @@ pub(super) fn process_action(
         ActionType::VerbItem => handle_verb_item(state, action),
         ActionType::Verb => handle_verb(state, action),
         ActionType::Movement => handle_movement(&mut *state.borrow_mut(), action.movement),
-        ActionType::Invalid => Err(InvalidAction.into()),
+        ActionType::Invalid => Err(InvalidEvent.into()),
     }
 }
 
@@ -180,24 +179,27 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         Some(room) => room,
         None => return Err(InvalidRoom.into()),
     };
-    let state_narratives = state.config.narratives.clone();
+    // let state_narratives = state.config.narratives.clone();
     let state_events = state.config.events.clone();
     let state_items = state.config.items.clone();
 
     let (inventory_item, subject) = extract_item_subject(state, &action);
-    let mut event_ids: Vec<&u16> = vec![];
+    let mut events: Vec<&Event> = vec![];
 
     if let (Some(verb), Some(subject), Some(inventory_item)) =
         (action.verb.clone(), subject.clone(), inventory_item.clone())
     {
-        event_ids = current_room
-            .room_events
+        events = current_room
+            .events
             .iter()
-            .filter(|event_id| {
-                let event = match state_events.iter().find(|event| event.id == **event_id) {
-                    Some(event) => event,
-                    None => return false,
-                };
+            .filter(|event| {
+                // let event = match state_events
+                //     .iter()
+                //     .find(|state_event| state_event.id == room_event.id)
+                // {
+                //     Some(event) => event,
+                //     None => return false,
+                // };
                 let required_verb_id = match event.required_verb {
                     Some(verb) => verb,
                     None => return false,
@@ -214,7 +216,7 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
                     && required_verb_id == verb.id
                     && required_subject_id == subject.id
             })
-            .collect::<Vec<&u16>>();
+            .collect();
     }
     // if action verb and subject exists, process action.
     // every event requires at least one verb and one subject
@@ -226,14 +228,17 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         // of events in a room. If the action verb matches the required verb for the event
         // and the action subject matches the event subject, we return an Option with the id
         // of the event or None
-        event_ids = current_room
-            .room_events
+        events = current_room
+            .events
             .iter()
-            .filter(|event_id| {
-                let event = match state_events.iter().find(|event| event.id == **event_id) {
-                    Some(event) => event,
-                    None => return false,
-                };
+            .filter(|event| {
+                // let event = match state_events
+                //     .iter()
+                //     .find(|state_event| state_event.id == room_event.id)
+                // {
+                //     Some(event) => event,
+                //     None => return false,
+                // };
                 let required_verb_id = match event.required_verb {
                     Some(verb) => verb,
                     None => return false,
@@ -246,7 +251,7 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
                     && required_subject_id == subject.id
                     && event.required_item.is_none()
             })
-            .collect::<Vec<&u16>>();
+            .collect();
     } else if let (Some(verb), None, Some(inventory_item)) =
         (action.verb, subject.clone(), inventory_item)
     {
@@ -254,14 +259,17 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         // of events in a room. If the action verb matches the required verb for the event
         // and the action subject matches the event subject, we return an Option with the id
         // of the event or None
-        event_ids = current_room
-            .room_events
+        events = current_room
+            .events
             .iter()
-            .filter(|event_id| {
-                let event = match state_events.iter().find(|event| event.id == **event_id) {
-                    Some(event) => event,
-                    None => return false,
-                };
+            .filter(|event| {
+                // let event = match state_events
+                //     .iter()
+                //     .find(|state_event| state_event.id == room_event.id)
+                // {
+                //     Some(event) => event,
+                //     None => return false,
+                // };
                 let required_verb_id = match event.required_verb {
                     Some(verb) => verb,
                     None => return false,
@@ -274,21 +282,24 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
                     && required_item_id == inventory_item.id
                     && event.required_subject.is_none()
             })
-            .collect::<Vec<&u16>>();
+            .collect();
     }
 
     // We only want to continue from this point on if we have a valid event_id
     // However, if the player tries to perform an action on a subject that isn't
     // associated with an event at the moment, we want to return that subject's
     // default text.
-    let event_id = if !event_ids.is_empty() {
-        match event_ids.iter().find(|e_id| {
-            match state_events.iter().find(|event| event.id == ***e_id) {
+    let event = if !events.is_empty() {
+        match events.iter().find(|room_event| {
+            match state_events
+                .iter()
+                .find(|state_event| state_event.id == room_event.id)
+            {
                 Some(event) => !event.completed,
                 None => false,
             }
         }) {
-            Some(event_id) => event_id,
+            Some(event) => event,
             None => {
                 if let Some(subject) = subject {
                     return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
@@ -303,10 +314,10 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         return Err(InvalidEvent.into());
     };
 
-    let event = match state_events.iter().find(|event| event.id == **event_id) {
-        Some(event) => event,
-        None => return Err(InvalidEvent.into()),
-    };
+    // let event = match state_events.iter().find(|event| event.id == **event_id) {
+    //     Some(event) => event,
+    //     None => return Err(InvalidEvent.into()),
+    // };
 
     let required_events_completed = state
         .config
@@ -326,7 +337,10 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         }
     }
     // if the event removes an item from the user inventory, retrieve the item_id
-    if let Some(item_id) = match state_events.iter().find(|event| event.id == **event_id) {
+    if let Some(item_id) = match state_events
+        .iter()
+        .find(|state_event| state_event.id == event.id)
+    {
         Some(event) => event.remove_item,
         None => return Err(InvalidEvent.into()),
     } {
@@ -343,6 +357,72 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
             };
         }
     }
+
+    // Handle moving subjects around if event requires that
+    if event.remove_subject {
+        let event_subject = match subject {
+            Some(subject) => subject,
+            None => return Err(InvalidEvent.into()),
+        };
+        if let Some(location) = event.move_subject_to_location {
+            state
+                .rooms
+                .iter_mut()
+                .find(|room| room.id == current_room_id)
+                .unwrap()
+                .remove_subject(event_subject.id);
+            state
+                .rooms
+                .iter_mut()
+                .find(|r| r.id == location)
+                .unwrap()
+                .add_subject(event_subject);
+        } else {
+            state
+                .rooms
+                .iter_mut()
+                .find(|room| room.id == current_room_id)
+                .unwrap()
+                .remove_subject(event_subject.id);
+        }
+    }
+    if let Some(new_subject_id) = event.add_subject {
+        let new_subject = state
+            .config
+            .subjects
+            .iter()
+            .find(|s| s.id == new_subject_id)
+            .unwrap();
+        state
+            .rooms
+            .iter_mut()
+            .find(|room| room.id == current_room_id)
+            .unwrap()
+            .add_subject(new_subject.clone());
+    }
+    // if let Some(subject) = subject {
+    //     match player_remove_subject(&mut state.player, subject.clone()) {
+    //         Ok(message) => event_messages_vec.push(message),
+    //         Err(message) => event_messages_vec.push(
+    //             message
+    //                 .downcast::<Box<super::errors::NoSubject>>()
+    //                 .unwrap()
+    //                 .to_string(),
+    //         ),
+    //     };
+    // }
+    if event.remove_old_narrative {
+        if let Some(narrative_after) = event.narrative_after {
+            state.set_narrative(narrative_after);
+        }
+        // state
+        //     .rooms
+        //     .iter_mut()
+        //     .find(|room| room.id == current_room_id)
+        //     .unwrap()
+        //     .narrative = event.narrative.unwrap();
+    }
+
     let event_message = event_messages_vec
         .clone()
         .iter()
@@ -353,9 +433,14 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
 
     // if the event replaces current narrative, we set the current narrative to the event narrative
     // and add the current narrative to the event messages
-    let event_message = return_formated_message(event, state, event_message, &state_narratives)?;
+    let event_message = return_formated_message(event, state, event_message)?;
     // completes the event so it can't be repeated
-    if let Some(event) = state.config.events.iter_mut().find(|e| &**e == event) {
+    if let Some(event) = state
+        .config
+        .events
+        .iter_mut()
+        .find(|state_event| state_event.id == event.id)
+    {
         if event.destination.is_some() {
             state.current_room = event.destination.unwrap();
         }
@@ -368,57 +453,57 @@ fn return_formated_message(
     event: &crate::config::Event,
     state: &mut State,
     event_message: String,
-    state_narratives: &[Narrative],
+    // state_narratives: &[Narrative],
 ) -> NRResult<ParsingResult> {
     let state_ref = state.clone();
-    if event.remove_old_narrative {
-        match state
-            .config
-            .narratives
-            .iter()
-            .find(|narrative| match event.narrative {
-                Some(narrative_id) => narrative.id == narrative_id,
-                None => false,
-            }) {
-            Some(narrative) => {
-                let new_room_text = parse_room_text(
-                    state_ref,
-                    narrative.text.clone(),
-                    event_message,
-                    Some(event.id),
-                )?;
-                Ok(ParsingResult::EventSuccess(new_room_text))
-            }
-            None => Err(InvalidNarrative.into()),
+    // if event.remove_old_narrative {
+    match state
+        .config
+        .narratives
+        .iter()
+        .find(|narrative| match event.narrative {
+            Some(narrative_id) => narrative.id == narrative_id,
+            None => false,
+        }) {
+        Some(narrative) => {
+            let new_room_text = parse_room_text(
+                state_ref,
+                narrative.text.clone(),
+                event_message,
+                Some(event.id),
+            )?;
+            Ok(ParsingResult::EventSuccess(new_room_text))
         }
-    } else {
-        match state_narratives
-            .iter()
-            .find(|narrative| match event.narrative {
-                Some(narrative_id) => narrative.id == narrative_id,
-                None => false,
-            }) {
-            Some(narrative) => {
-                let room_narrative_id = state
-                    .rooms
-                    .iter()
-                    .find(|room| room.id == state.current_room)
-                    .unwrap()
-                    .narrative;
-                let room_narrative = state_narratives
-                    .iter()
-                    .find(|r_narrative| r_narrative.id == room_narrative_id)
-                    .unwrap();
-                let room_text =
-                    room_narrative.text.clone() + "\n\n" + narrative.text.clone().as_str();
-                let new_room_text =
-                    parse_room_text(state_ref, room_text, event_message, Some(event.id))?;
-
-                Ok(ParsingResult::EventSuccess(new_room_text))
-            }
-            None => Err(InvalidNarrative.into()),
-        }
+        None => Err(InvalidNarrative.into()),
     }
+    // } else {
+    //     match state_narratives
+    //         .iter()
+    //         .find(|narrative| match event.narrative {
+    //             Some(narrative_id) => narrative.id == narrative_id,
+    //             None => false,
+    //         }) {
+    //         Some(narrative) => {
+    //             let room_narrative_id = state
+    //                 .rooms
+    //                 .iter()
+    //                 .find(|room| room.id == state.current_room)
+    //                 .unwrap()
+    //                 .narrative;
+    //             let room_narrative = state_narratives
+    //                 .iter()
+    //                 .find(|r_narrative| r_narrative.id == room_narrative_id)
+    //                 .unwrap();
+    //             let room_text =
+    //                 room_narrative.text.clone() + "\n\n" + narrative.text.clone().as_str();
+    //             let new_room_text =
+    //                 parse_room_text(state_ref, room_text, event_message, Some(event.id))?;
+
+    //             Ok(ParsingResult::EventSuccess(new_room_text))
+    //         }
+    //         None => Err(InvalidNarrative.into()),
+    //     }
+    // }
 }
 
 fn extract_item_subject(state: &State, action: &Action) -> (Option<Item>, Option<Subject>) {
@@ -446,9 +531,13 @@ fn extract_item_subject(state: &State, action: &Action) -> (Option<Item>, Option
     };
     let subject = match action.subject.clone() {
         None => None,
-        Some(state_subject) => {
-            if current_room.subjects.contains(&state_subject.id) {
-                Some(state_subject)
+        Some(action_subject) => {
+            if current_room
+                .subjects
+                .iter()
+                .any(|s| s.id == action_subject.id)
+            {
+                Some(action_subject)
             } else {
                 None
             }
@@ -551,7 +640,7 @@ fn look_subject(state: &State, subject: Subject) -> NRResult<ParsingResult> {
     };
     let room_subjects = &current_room.subjects;
 
-    if room_subjects.contains(&subject.id) {
+    if room_subjects.contains(&subject) {
         Ok(ParsingResult::Look(subject.description))
     } else {
         Ok(ParsingResult::Look("I can't see that here".to_string()))
@@ -565,13 +654,10 @@ fn look_room(state: &RefCell<State>) -> NRResult<ParsingResult> {
         Some(room) => room,
         None => return Err(NoRoom.into()),
     };
-    let room_subjects = state
-        .borrow()
-        .config
+    let room_subjects = current_room
         .subjects
         .clone()
         .iter()
-        .filter(|subject| current_room.subjects.contains(&subject.id))
         .map(|subject| subject.name.clone())
         .collect::<Vec<String>>()
         .join("\n");

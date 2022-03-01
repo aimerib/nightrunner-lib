@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use super::*;
 use crate::{
     config::{Config, State},
-    parser::{
-        errors::InvalidEvent,
-        interpreter::{EventMessage, MessageParts},
-    },
+    parser::interpreter::{EventMessage, MessageParts},
 };
 #[cfg(test)]
 use pretty_assertions::assert_eq;
@@ -84,5 +81,9 @@ fn it_parses_verb_and_item_or_subject() {
     // For convenience, this error wraps the action as it was
     // interpreted by the parser from the input. This is useful
     // when writing custom logic for the front-end.
-    assert_eq!(result.unwrap_err().to_string(), InvalidEvent.to_string());
+    assert_eq!(
+        result.unwrap(),
+        ParsingResult::SubjectNoEvent("default text".to_string()),
+        // _err().to_string(), InvalidEvent.to_string()
+    );
 }

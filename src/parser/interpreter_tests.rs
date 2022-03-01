@@ -394,8 +394,9 @@ fn it_handles_verb_subjects() {
         ParsingResult::Look(String::from("a subject description"))
     );
     assert_eq!(
-        action_give_subject_result.unwrap_err().to_string(),
-        InvalidEvent.to_string()
+        action_give_subject_result.unwrap(),
+        ParsingResult::SubjectNoEvent("default text".to_string()) // _err().to_string(),
+                                                                  // InvalidEvent.to_string()
     );
 }
 
@@ -458,8 +459,9 @@ fn it_handles_events() {
 
     let action_give_subject_result = handle_event(state_ref, action_give_subject);
     assert_eq!(
-        action_give_subject_result.unwrap_err().to_string(),
-        InvalidEvent.to_string()
+        action_give_subject_result.unwrap(),
+        ParsingResult::SubjectNoEvent("default text".to_string()) // _err().to_string(),
+                                                                  // InvalidEvent.to_string()
     );
 
     // Event 2 can be completed now

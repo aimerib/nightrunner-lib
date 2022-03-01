@@ -1,5 +1,53 @@
-use crate::{config::directions::Directions, parser::errors::NoItem, NRResult};
 use serde::{Deserialize, Serialize};
+
+use super::{directions::Directions, Event, Item, Storage, Subject};
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) struct RoomBlueprint {
+    pub(crate) id: u16,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) exits: Vec<Exits>,
+    pub(crate) item_ids: Vec<u16>,
+    pub(crate) narrative: u16,
+    pub(crate) subject_ids: Vec<u16>,
+}
+
+// Should I make the build implementation on RoomBlueprint or in the Room struct?
+// This could make sense in both places, but my intuition is that there is less
+// memory overhead in the Room struct since you only need to pass the variables
+// to the method once to build all the rooms, whereas the RoomBlueprint struct
+// would need to be passed to the method once for each room.
+// impl RoomBlueprint {
+//     pub(crate) fn build(self, events: &[Event], items: &[Item], subjects: &[Subject]) -> Room {
+//         let mut room = Room {
+//             id: self.id,
+//             name: self.name.clone(),
+//             description: self.description.clone(),
+//             exits: self.exits.clone(),
+//             narrative: self.narrative,
+//             subjects: vec![],
+//             stash: Storage::default(),
+//             events: vec![],
+//         };
+//         for item_id in &self.item_ids {
+//             if let Some(item) = items.iter().find(|item| item.id == *item_id) {
+//                 room.stash.add_item(item.clone());
+//             }
+//         }
+//         for subject_id in &self.subject_ids {
+//             if let Some(subject) = subjects.iter().find(|subject| subject.id == *subject_id) {
+//                 room.subjects.push(subject.clone());
+//             }
+//         }
+//         for _ in events {
+//             if let Some(event) = events.iter().find(|event| event.location == self.id) {
+//                 room.events.push(event.clone());
+//             }
+//         }
+//         room
+//     }
+// }
 
 /// This struct represents a room in the game.
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, Ord, PartialEq, PartialOrd)]
@@ -26,7 +74,7 @@ pub struct Room {
     pub stash: Storage,
     /// This is the list of events that can
     /// be triggered in this room.
-    pub room_events: Vec<u16>,
+    pub events: Vec<Event>,
     /// This is the actual text displayed
     /// when the user enters a room.
     /// If an event completed in this room
@@ -37,7 +85,7 @@ pub struct Room {
     pub narrative: u16,
     /// This is the list of subjects that can
     /// be interacted with in this room.
-    pub subjects: Vec<u16>,
+    pub subjects: Vec<Subject>,
 }
 
 impl Room {
@@ -58,69 +106,52 @@ impl Room {
             Err(())
         }
     }
-}
 
-/// This struct represents the storage for both the player
-/// and the room and implements functions to add and remove
-/// items from the storage.
-#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize, Default)]
-#[serde(rename_all = "snake_case")]
-pub struct Storage {
-    /// This field contains the list of actual
-    /// items available in the storage struct
-    /// and gets populated during the state
-    /// initialization based on the item_ids field
-    pub items: Vec<Item>,
-    /// The list of item ids that are currently
-    /// available in storage. Only used for the
-    /// configuration data.
-    pub item_ids: Vec<u16>,
-}
-
-impl Storage {
-    /// This function adds an item to the storage.
-    pub fn add_item(&mut self, item: Item) {
-        self.items.push(item);
+    pub fn add_subject(&mut self, subject: Subject) {
+        self.subjects.push(subject);
     }
-    /// This function removes an item from the storage
-    /// if availabl and returns the item removed. This
-    /// is so that the same item can be added to another
-    /// storage, for example when the user drops an item
-    /// from their inventory or picks up an item from
-    /// the room.
-    pub fn remove_item(&mut self, item: Item) -> NRResult<Item> {
-        let target_item = self.items.iter().position(|i| i.name == item.name);
-        match target_item {
-            Some(item_index) => Ok(self.items.remove(item_index)),
-            None => Err(NoItem.into()),
-        }
+    pub fn remove_subject(&mut self, subject_id: u16) {
+        self.subjects.retain(|s| s.id != subject_id);
     }
-}
 
-/// This struct represents an item in the game.
-/// It contains the name of the item, the description
-/// and whether or not the item can be picked up.
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "snake_case")]
-pub struct Item {
-    pub id: u16,
-    /// The name of the item.
-    pub name: String,
-    /// The description of the item.
-    /// This is used when the player looks at
-    /// the item.
-    pub description: String,
-    /// Whether or not the item can be picked up.
-    /// If this is true then the item can be
-    /// picked up by the player. Most of the times
-    /// if an item can't be picked up you will
-    /// want to use a subject instead.
-    pub can_pick: bool,
-}
-
-impl std::fmt::Display for Item {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", &self.name[..])
+    pub(crate) fn build_rooms(
+        blueprints: &[RoomBlueprint],
+        events: &[Event],
+        items: &[Item],
+        subjects: &[Subject],
+    ) -> Vec<Room> {
+        blueprints
+            .iter()
+            .map(|room_blueprint| {
+                let mut room = Room {
+                    id: room_blueprint.id,
+                    name: room_blueprint.name.clone(),
+                    description: room_blueprint.description.clone(),
+                    exits: room_blueprint.exits.clone(),
+                    narrative: room_blueprint.narrative,
+                    subjects: vec![],
+                    stash: Storage::default(),
+                    events: vec![],
+                };
+                for item_id in &room_blueprint.item_ids {
+                    if let Some(item) = items.iter().find(|item| item.id == *item_id) {
+                        room.stash.add_item(item.clone());
+                    }
+                }
+                for subject_id in &room_blueprint.subject_ids {
+                    if let Some(subject) = subjects.iter().find(|subject| subject.id == *subject_id)
+                    {
+                        room.subjects.push(subject.clone());
+                    }
+                }
+                for event in events {
+                    if event.location == room_blueprint.id {
+                        room.events.push(event.clone());
+                    }
+                }
+                room
+            })
+            .collect::<Vec<Room>>()
     }
 }
 

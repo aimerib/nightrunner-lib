@@ -3,8 +3,8 @@ use crate::config::{
     directions::{AllowedDirections, Directions},
     movements::AllowedMovements,
     prepositions::AllowedPrepositions,
-    rooms::{Exits, Item, Room, Storage},
-    Config, Event, Narrative, State, Subject, Verb, VerbFunction,
+    rooms::{Exits, RoomBlueprint},
+    Config, Event, Item, Narrative, State, Subject, Verb, VerbFunction,
 };
 
 /// Returns a sample Config that can be used during testing.
@@ -115,8 +115,8 @@ pub fn mock_config() -> Config {
             },
         ],
 
-        rooms: vec![
-            Room {
+        room_blueprints: vec![
+            RoomBlueprint {
                 id: 1,
                 name: String::from("room 1"),
                 description: String::from("first room"),
@@ -124,15 +124,14 @@ pub fn mock_config() -> Config {
                     room_id: 2,
                     direction: Directions::South,
                 }],
-                stash: Storage {
-                    items: Vec::new(),
+
                     item_ids: vec![1, 2],
-                },
-                room_events: vec![1, 4, 2, 6],
+                
+                // room_events: vec![1, 4, 2, 6],
                 narrative: 1,
-                subjects: vec![1],
+                subject_ids: vec![1],
             },
-            Room {
+            RoomBlueprint {
                 id: 2,
                 name: String::from("room 2"),
                 description: String::from("second room"),
@@ -140,13 +139,11 @@ pub fn mock_config() -> Config {
                     room_id: 1,
                     direction: Directions::North,
                 }],
-                stash: Storage {
-                    items: Vec::new(),
+
                     item_ids: Vec::new(),
-                },
-                room_events: vec![5],
+                // room_events: vec![5],
                 narrative: 2,
-                subjects: vec![2],
+                subject_ids: vec![2],
             },
         ],
         events: vec![
@@ -165,6 +162,10 @@ pub fn mock_config() -> Config {
                 remove_old_narrative: false,
                 remove_item: None,
                 required_events: vec![],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             },
             Event {
                 id: 2,
@@ -181,6 +182,10 @@ pub fn mock_config() -> Config {
                 remove_old_narrative: true,
                 remove_item: None,
                 required_events: vec![4],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             },
             Event {
                 id: 3,
@@ -197,6 +202,10 @@ pub fn mock_config() -> Config {
                 remove_old_narrative: true,
                 remove_item: None,
                 required_events: vec![2],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             },
             Event {
                 id: 4,
@@ -213,6 +222,10 @@ pub fn mock_config() -> Config {
                 remove_old_narrative: true,
                 remove_item: None,
                 required_events: vec![],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             },
             Event {
                 id: 5,
@@ -229,22 +242,30 @@ pub fn mock_config() -> Config {
                 remove_old_narrative: false,
                 remove_item: None,
                 required_events: vec![],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             },
             Event {
-              id: 6,
-              name: "event 6".to_string(),
-              description: "gives item 2 to subject1 when talking to subject1 after event 5".to_string(),
-              location: 1,
-              destination: None,
-              narrative: Some(4),
-              required_verb: Some(7),
-              required_subject: Some(1),
-              required_item: Some(2),
-              completed: false,
-              add_item: None,
-              remove_old_narrative: false,
-              remove_item: Some(2),
-              required_events: vec![5],
+                id: 6,
+                name: "event 6".to_string(),
+                description: "gives item 2 to subject1 when talking to subject1 after event 5".to_string(),
+                location: 1,
+                destination: None,
+                narrative: Some(4),
+                required_verb: Some(7),
+                required_subject: Some(1),
+                required_item: Some(2),
+                completed: false,
+                add_item: None,
+                remove_old_narrative: false,
+                remove_item: Some(2),
+                required_events: vec![5],
+                add_subject: None,
+                remove_subject: false,
+                move_subject_to_location: None,
+                narrative_after: None,
             }
         ],
 

@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 pub mod test_helpers;
 
 use crate::config::directions::Directions;
-use crate::config::rooms::Item;
-use crate::config::{Player, State};
+// use crate::config::rooms::Room;
+use crate::config::{Item, Player, State};
 use crate::parser::errors::{InvalidMovement, InvalidRoom, NoItem, NoRoom};
 use crate::parser::interpreter::{EventMessage, MessageParts};
 use crate::NRResult;
@@ -236,7 +236,6 @@ pub fn parse_room_text(
     event_id: Option<u16>,
 ) -> NRResult<EventMessage> {
     let current_room = match state
-        .config
         .rooms
         .iter()
         .find(|room| room.id == state.current_room)
@@ -252,20 +251,17 @@ pub fn parse_room_text(
         .iter()
         .map(|item| item.name.clone())
         .collect::<Vec<String>>();
-    let room_items = state
-        .config
+    let room_items = current_room
+        .stash
         .items
         .clone()
         .iter()
-        .filter(|item| current_room.stash.item_ids.contains(&item.id))
         .map(|item| item.name.clone())
         .collect::<Vec<_>>();
-    let room_subjects = state
-        .config
+    let room_subjects = current_room
         .subjects
         .clone()
         .iter()
-        .filter(|subject| current_room.subjects.contains(&subject.id))
         .map(|subject| subject.name.clone())
         .collect::<Vec<_>>();
     let mut event_items = vec![];
@@ -291,21 +287,16 @@ pub fn parse_room_text(
         .exits
         .clone()
         .iter()
-        .map(|exit| {
-            match state
-                .config
-                .rooms
-                .iter()
-                .find(|room| room.id == exit.room_id)
-            {
+        .map(
+            |exit| match state.rooms.iter().find(|room| room.id == exit.room_id) {
                 Some(room) => format!(
                     "to the {} you see {}",
                     exit.direction.clone(),
                     room.description.clone()
                 ),
                 None => String::new(),
-            }
-        })
+            },
+        )
         .collect::<Vec<String>>();
     let exits_string = match exits_vec.len() {
         0 => String::new(),
@@ -381,6 +372,23 @@ fn process_templated_text(text: String, items_and_subjects: &[String]) -> (Strin
         .join("\n");
     (processed_text, templated_words)
 }
+
+// pub fn move_subject_to_location(
+//     current_subject_location: &mut Room,
+//     subject_id: u16,
+//     destination: &mut Room,
+// ) {
+//     let subject = match current_subject_location
+//         .subjects
+//         .iter()
+//         .find(|subject| subject.id == subject_id)
+//     {
+//         Some(subject) => subject.clone(),
+//         None => return,
+//     };
+//     current_subject_location.remove_subject(subject_id);
+//     destination.add_subject(subject);
+// }
 
 #[cfg(test)]
 mod tests;

@@ -5,18 +5,16 @@
   exits:
     - room_id: 2
       direction: south
-  stash:
-    items: []
-    item_ids:
-      - 1
-      - 2
+  item_ids:
+    - 1
+    - 2
   room_events:
     - 1
     - 4
     - 2
     - 6
   narrative: 1
-  subjects:
+  subject_ids:
     - 1
 - id: 2
   name: room 2
@@ -24,9 +22,7 @@
   exits:
     - room_id: 1
       direction: north
-  stash:
-    items: []
-    item_ids: []
+  item_ids: []
   room_events: [5]
   narrative: 2
-  subjects: [2]
+  subject_ids: [2]

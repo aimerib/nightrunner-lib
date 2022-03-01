@@ -11,7 +11,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use self::action::Action;
-use self::errors::{EmptyInput, InvalidAction};
+use self::errors::{EmptyInput, InvalidEvent};
 use self::interpreter::process_action;
 use crate::config::State;
 use crate::NRResult;
@@ -29,7 +29,7 @@ pub fn parse(state: Rc<RefCell<State>>, input: &str) -> NRResult<ParsingResult> 
         let action = Action::parse(&*state.borrow(), input);
         match action.is_valid() {
             true => process_action(&state, action),
-            false => Err(InvalidAction.into()),
+            false => Err(InvalidEvent.into()),
         }
     } else {
         Err(EmptyInput.into())
