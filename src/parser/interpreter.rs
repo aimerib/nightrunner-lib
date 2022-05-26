@@ -174,8 +174,11 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
     let mut event_messages_vec: Vec<String> = Vec::new();
 
     let current_room_id = state.current_room;
-    let state_rooms = state.rooms.clone();
-    let current_room = match state_rooms.iter().find(|room| room.id == current_room_id) {
+    let mut state_rooms = state.rooms.clone();
+    let current_room = match state_rooms
+        .iter_mut()
+        .find(|room| room.id == current_room_id)
+    {
         Some(room) => room,
         None => return Err(InvalidRoom.into()),
     };
@@ -184,14 +187,14 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
     let state_items = state.config.items.clone();
 
     let (inventory_item, subject) = extract_item_subject(state, &action);
-    let mut events: Vec<&Event> = vec![];
+    let mut events: Vec<&mut Event> = vec![];
 
     if let (Some(verb), Some(subject), Some(inventory_item)) =
         (action.verb.clone(), subject.clone(), inventory_item.clone())
     {
         events = current_room
             .events
-            .iter()
+            .iter_mut()
             .filter(|event| {
                 // let event = match state_events
                 //     .iter()
@@ -230,7 +233,7 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         // of the event or None
         events = current_room
             .events
-            .iter()
+            .iter_mut()
             .filter(|event| {
                 // let event = match state_events
                 //     .iter()
@@ -261,7 +264,7 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
         // of the event or None
         events = current_room
             .events
-            .iter()
+            .iter_mut()
             .filter(|event| {
                 // let event = match state_events
                 //     .iter()
@@ -289,30 +292,35 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
     // However, if the player tries to perform an action on a subject that isn't
     // associated with an event at the moment, we want to return that subject's
     // default text.
-    let event = if !events.is_empty() {
-        match events.iter().find(|room_event| {
-            match state_events
-                .iter()
-                .find(|state_event| state_event.id == room_event.id)
-            {
-                Some(event) => !event.completed,
-                None => false,
-            }
-        }) {
-            Some(event) => event,
-            None => {
-                if let Some(subject) = subject {
-                    return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
-                } else {
-                    return Err(InvalidEvent.into());
-                }
-            }
-        }
-    } else if let Some(subject) = subject {
-        return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
-    } else {
-        return Err(InvalidEvent.into());
-    };
+    // let event = if !events.is_empty() {
+    //     match events.iter().find(|room_event| {
+    //         match state_events
+    //             .iter()
+    //             .find(|state_event| state_event.id == room_event.id)
+    //         {
+    //             Some(event) => !event.completed,
+    //             None => false,
+    //         }
+    //     }) {
+    //         Some(event) => event,
+    //         None => {
+    //             if let Some(subject) = subject {
+    //                 return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
+    //             } else {
+    //                 return Err(InvalidEvent.into());
+    //             }
+    //         }
+    //     }
+    // } else if let Some(subject) = subject {
+    //     return Ok(ParsingResult::SubjectNoEvent(subject.default_text));
+    // } else {
+    //     return Err(InvalidEvent.into());
+    // };
+
+    let event = events
+        .iter_mut()
+        .find(|event| !event.is_completed())
+        .unwrap();
 
     // let event = match state_events.iter().find(|event| event.id == **event_id) {
     //     Some(event) => event,
@@ -435,16 +443,22 @@ fn handle_event(state: &mut State, action: Action) -> NRResult<ParsingResult> {
     // and add the current narrative to the event messages
     let event_message = return_formated_message(event, state, event_message)?;
     // completes the event so it can't be repeated
-    if let Some(event) = state
-        .config
-        .events
-        .iter_mut()
-        .find(|state_event| state_event.id == event.id)
-    {
-        if event.destination.is_some() {
-            state.current_room = event.destination.unwrap();
-        }
-        event.completed = true;
+    event.complete();
+
+    // if let Some(event) = state
+    //     .config
+    //     .events
+    //     .iter_mut()
+    //     .find(|state_event| state_event.id == event.id)
+    // {
+    //     if event.destination.is_some() {
+    //         state.current_room = event.destination.unwrap();
+    //     }
+
+    //     event.completed = true;
+    // }
+    if event.destination.is_some() {
+        state.current_room = event.destination.unwrap();
     }
     Ok(event_message)
 }

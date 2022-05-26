@@ -72,9 +72,9 @@ pub struct Room {
     /// This is the list of items that are
     /// currently in the room.
     pub stash: Storage,
-    /// This is the list of events that can
-    /// be triggered in this room.
-    pub events: Vec<Event>,
+    // /// This is the list of events that can
+    // /// be triggered in this room.
+    // pub events: Vec<Event>,
     /// This is the actual text displayed
     /// when the user enters a room.
     /// If an event completed in this room
