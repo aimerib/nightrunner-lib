@@ -309,6 +309,15 @@ pub struct Event {
     pub move_subject_to_location: Option<u16>,
 }
 
+impl Event {
+    pub fn is_completed(&self) -> bool {
+        self.completed
+    }
+    pub fn complete(&mut self) {
+        self.completed = true;
+    }
+}
+
 /// This struct represents an item in the game.
 /// It contains the name of the item, the description
 /// and whether or not the item can be picked up.

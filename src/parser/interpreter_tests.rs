@@ -436,7 +436,7 @@ fn it_handles_events() {
     );
     assert_eq!(
         state_ref
-            .config
+            .rooms
             .events
             .iter()
             .filter(|e| e.completed)
