@@ -84,6 +84,12 @@ pub fn mock_config() -> Config {
                 description: String::from("item 2 description"),
                 can_pick: true,
             },
+            Item {
+                id: 3,
+                name: String::from("item3"),
+                description: String::from("item 3 description"),
+                can_pick: true,
+            }
         ],
         narratives: vec![
             Narrative {
@@ -94,7 +100,7 @@ pub fn mock_config() -> Config {
             Narrative {
                 id: 2,
                 text: String::from(
-                    "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}.",
+                    "this is a templated which exists in the game {item3}.\n\nthis is a templated subject that exists in the game {subject2}.",
                 ),
                 description: String::from("text"),
             },
@@ -124,10 +130,7 @@ pub fn mock_config() -> Config {
                     room_id: 2,
                     direction: Directions::South,
                 }],
-
-                    item_ids: vec![1, 2],
-                
-                // room_events: vec![1, 4, 2, 6],
+                item_ids: vec![1, 2],
                 narrative: 1,
                 subject_ids: vec![1],
             },
@@ -139,9 +142,7 @@ pub fn mock_config() -> Config {
                     room_id: 1,
                     direction: Directions::North,
                 }],
-
-                    item_ids: Vec::new(),
-                // room_events: vec![5],
+                item_ids: vec![3],
                 narrative: 2,
                 subject_ids: vec![2],
             },
@@ -291,7 +292,13 @@ pub fn mock_json_data() -> String {
     serde_json::to_string(&data).unwrap()
 }
 
+/// export json data to a file
+pub fn export_json_data() {
+    let data = mock_json_data();
+    std::fs::write("test.json", data).unwrap();
+}
+
 /// function to create sample State strcuture for testing
 pub fn mock_state() -> State {
-    State::init(mock_config()).borrow().clone()
+    State::init(mock_config())
 }

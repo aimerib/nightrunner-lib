@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import wasmPack from 'vite-plugin-wasm-pack';
+import wasm from 'vite-plugin-wasm';
 export default defineConfig({
-  plugins: [wasmPack([],['@nightrunner/nightrunner_lib'])],
+  plugins: [wasm()],
 })

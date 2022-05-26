@@ -1,4 +1,150 @@
 {
+  "allowed_prepositions": {
+    "prepositions": [
+      "aboard",
+      "about",
+      "above",
+      "across",
+      "after",
+      "against",
+      "along",
+      "amid",
+      "among",
+      "around",
+      "as",
+      "at",
+      "before",
+      "behind",
+      "below",
+      "beneath",
+      "beside",
+      "between",
+      "beyond",
+      "but",
+      "by",
+      "concerning",
+      "considering",
+      "despite",
+      "during",
+      "except",
+      "following",
+      "for",
+      "from",
+      "in",
+      "inside",
+      "into",
+      "like",
+      "minus",
+      "near",
+      "next",
+      "of",
+      "off",
+      "on",
+      "onto",
+      "opposite",
+      "out",
+      "outside",
+      "over",
+      "past",
+      "per",
+      "plus",
+      "regarding",
+      "round",
+      "save",
+      "since",
+      "than",
+      "through",
+      "till",
+      "to",
+      "toward",
+      "under",
+      "underneath",
+      "unlike",
+      "until",
+      "up",
+      "upon",
+      "versus",
+      "via",
+      "with",
+      "within",
+      "without"
+    ]
+  },
+  "allowed_determiners": {
+    "determiners": [
+      "my",
+      "our",
+      "your",
+      "his",
+      "her",
+      "its",
+      "their",
+      "first",
+      "second",
+      "third",
+      "next",
+      "last",
+      "much",
+      "some",
+      "no",
+      "any",
+      "many",
+      "enough",
+      "several",
+      "little",
+      "all",
+      "lot of",
+      "plenty of",
+      "another",
+      "a",
+      "an",
+      "the",
+      "each",
+      "every",
+      "neither",
+      "either",
+      "one",
+      "two",
+      "three",
+      "ten",
+      "fifty",
+      "hundred",
+      "thousand"
+    ]
+  },
+  "allowed_movements": {
+    "movements": [
+      "go",
+      "move",
+      "run",
+      "walk",
+      "jog",
+      "amble",
+      "dart",
+      "limp",
+      "saunter",
+      "scamper",
+      "scurry",
+      "stagger",
+      "strut",
+      "swagger",
+      "tiptoe",
+      "waltz",
+      "sneak"
+    ]
+  },
+  "allowed_directions": {
+    "directions": [
+      "north",
+      "south",
+      "east",
+      "west",
+      "up",
+      "down",
+      "left",
+      "right"
+    ]
+  },
   "allowed_verbs": [
     {
       "id": 1,
@@ -8,14 +154,6 @@
         "q"
       ],
       "verb_function": "quit"
-    },
-    {
-      "id": 7,
-      "names": [
-        "give",
-        "hand"
-      ],
-      "verb_function": "normal"
     },
     {
       "id": 2,
@@ -41,22 +179,6 @@
       "verb_function": "inventory"
     },
     {
-      "id": 6,
-      "names": [
-        "drop",
-        "place"
-      ],
-      "verb_function": "drop"
-    },
-    {
-      "id": 8,
-      "names": [
-        "talk",
-        "chat"
-      ],
-      "verb_function": "talk"
-    },
-    {
       "id": 5,
       "names": [
         "pick",
@@ -69,6 +191,30 @@
         "g"
       ],
       "verb_function": "take"
+    },
+    {
+      "id": 6,
+      "names": [
+        "drop",
+        "place"
+      ],
+      "verb_function": "drop"
+    },
+    {
+      "id": 7,
+      "names": [
+        "give",
+        "hand"
+      ],
+      "verb_function": "normal"
+    },
+    {
+      "id": 8,
+      "names": [
+        "talk",
+        "chat"
+      ],
+      "verb_function": "talk"
     },
     {
       "id": 9,
@@ -90,6 +236,12 @@
       "name": "item2",
       "description": "item 2 description",
       "can_pick": true
+    },
+    {
+      "id": 3,
+      "name": "item3",
+      "description": "item 3 description",
+      "can_pick": true
     }
   ],
   "subjects": [
@@ -97,18 +249,24 @@
       "id": 1,
       "name": "subject1",
       "description": "a subject description",
-      "default_text": "default text when no event is triggered by talking to this subject aaa aaaaaaa"
+      "default_text": "default text"
+    },
+    {
+      "id": 2,
+      "name": "subject2",
+      "description": "subject2 description",
+      "default_text": "default text"
     }
   ],
   "narratives": [
     {
       "id": 1,
-      "text": "Narrative text for room 1",
+      "text": "text",
       "description": "text"
     },
     {
       "id": 2,
-      "text": "This is the narrative text for room 2.",
+      "text": "this is a templated which exists in the game {item3}.\n\nthis is a templated subject that exists in the game {subject2}.",
       "description": "text"
     },
     {
@@ -118,32 +276,41 @@
     },
     {
       "id": 4,
-      "text": "Talking to subject 1.",
-      "description": "what happens when you talk to someone"
+      "text": "this narrative should be returned along with the text of room 1.",
+      "description": "a narrative that is added to the room narrative"
+    },
+    {
+      "id": 5,
+      "text": "this narrative should be returned along with the text of room 1 when completing event 6.",
+      "description": "a narrative that is added to the room narrative"
     }
   ],
   "events": [
     {
       "id": 1,
+      "location": 1,
       "name": "text",
       "description": "text",
-      "location": 1,
       "destination": null,
-      "narrative": 4,
-      "required_verb": 8,
+      "narrative": 1,
+      "required_verb": 2,
       "required_subject": 1,
       "required_item": null,
       "completed": false,
       "add_item": null,
       "remove_old_narrative": false,
+      "narrative_after": null,
       "remove_item": null,
-      "required_events": []
+      "required_events": [],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
     },
     {
       "id": 2,
-      "name": "text",
-      "description": "text",
       "location": 1,
+      "name": "event 2",
+      "description": "hug subject 2 - requires event 4",
       "destination": null,
       "narrative": 3,
       "required_verb": 9,
@@ -152,16 +319,20 @@
       "completed": false,
       "add_item": null,
       "remove_old_narrative": true,
+      "narrative_after": null,
       "remove_item": null,
       "required_events": [
         4
-      ]
+      ],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
     },
     {
       "id": 3,
+      "location": 1,
       "name": "text",
       "description": "text",
-      "location": 1,
       "destination": null,
       "narrative": 2,
       "required_verb": 2,
@@ -170,14 +341,80 @@
       "completed": false,
       "add_item": null,
       "remove_old_narrative": true,
+      "narrative_after": null,
       "remove_item": null,
       "required_events": [
         2
-      ]
+      ],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
+    },
+    {
+      "id": 4,
+      "location": 1,
+      "name": "event 4",
+      "description": "talk to subject 1",
+      "destination": null,
+      "narrative": 1,
+      "required_verb": 8,
+      "required_subject": 1,
+      "required_item": null,
+      "completed": false,
+      "add_item": null,
+      "remove_old_narrative": true,
+      "narrative_after": null,
+      "remove_item": null,
+      "required_events": [],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
+    },
+    {
+      "id": 5,
+      "location": 2,
+      "name": "event 5",
+      "description": "gives item 2 to player when talking to subject2",
+      "destination": 1,
+      "narrative": 4,
+      "required_verb": 8,
+      "required_subject": 2,
+      "required_item": null,
+      "completed": false,
+      "add_item": 2,
+      "remove_old_narrative": false,
+      "narrative_after": null,
+      "remove_item": null,
+      "required_events": [],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
+    },
+    {
+      "id": 6,
+      "location": 1,
+      "name": "event 6",
+      "description": "gives item 2 to subject1 when talking to subject1 after event 5",
+      "destination": null,
+      "narrative": 4,
+      "required_verb": 7,
+      "required_subject": 1,
+      "required_item": 2,
+      "completed": false,
+      "add_item": null,
+      "remove_old_narrative": false,
+      "narrative_after": null,
+      "remove_item": 2,
+      "required_events": [
+        5
+      ],
+      "add_subject": null,
+      "remove_subject": false,
+      "move_subject_to_location": null
     }
   ],
-  "intro": "text",
-  "rooms": [
+  "intro": "The introduction text to be displayed at the begining of the game.",
+  "room_blueprints": [
     {
       "id": 1,
       "name": "room 1",
@@ -188,19 +425,12 @@
           "direction": "south"
         }
       ],
-      "stash": {
-        "items": [],
-        "item_ids": [
-          1,
-          2
-        ]
-      },
-      "room_events": [
+      "item_ids": [
         1,
         2
       ],
       "narrative": 1,
-      "subjects": [
+      "subject_ids": [
         1
       ]
     },
@@ -214,13 +444,13 @@
           "direction": "north"
         }
       ],
-      "stash": {
-        "items": [],
-        "item_ids": []
-      },
-      "room_events": [],
+      "item_ids": [
+        3
+      ],
       "narrative": 2,
-      "subjects": []
+      "subject_ids": [
+        2
+      ]
     }
   ]
 }

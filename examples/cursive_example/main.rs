@@ -89,65 +89,116 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn on_submit(siv: &mut Cursive, query: &str) {
     let nr = siv.user_data::<NightRunner>().unwrap();
 
-    let result = nr.parse_input(query);
-    match result {
-        Ok(parsing_result) => match parsing_result {
-            ParsingResult::NewItem(item_message) => siv
-                .call_on_name("room_text", |view: &mut TextView| view.append(item_message))
-                .unwrap(),
-            ParsingResult::DropItem(drop_message) => siv
-                .call_on_name("room_text", |view: &mut TextView| view.append(drop_message))
-                .unwrap(),
-            ParsingResult::Look(text) => siv.add_layer(
-                Dialog::around(TextView::new(text))
-                    .dismiss_button("OK")
-                    .h_align(HAlign::Center)
-                    .align_center(),
-            ),
-            ParsingResult::Inventory(inventory) => siv.add_layer(
-                Dialog::around(TextView::new(inventory))
-                    .dismiss_button("OK")
-                    .h_align(HAlign::Center)
-                    .align_center(),
-            ),
-            ParsingResult::EventSuccess(event_message) => {
-                let EventMessage {
-                    message,
-                    message_parts,
-                    templated_words: _,
-                } = event_message;
-                siv.call_on_name("room_text", |view: &mut TextView| {
-                    view.set_content(message);
-                    view.append(&message_parts.get(&MessageParts::EventText).unwrap().clone());
-                })
-                .unwrap();
+    if query == "!rewind" {
+        match nr.rewind_state() {
+            Ok(rewind_message) => {
+                siv.add_layer(
+                    Dialog::around(TextView::new(rewind_message.to_string()))
+                        .dismiss_button("OK")
+                        .h_align(HAlign::Center)
+                        .align_center(),
+                );
             }
-            ParsingResult::SubjectNoEvent(subject_text) => siv
-                .call_on_name("room_text", |view: &mut TextView| {
-                    view.append("\n".to_owned() + &subject_text);
-                })
-                .unwrap(),
-            ParsingResult::Help(help_text) => {
-                siv.add_fullscreen_layer(ResizedView::with_full_screen(
-                    Layer::new(
-                        Dialog::around(TextView::new(help_text))
+            Err(e) => {
+                siv.add_layer(
+                    Dialog::around(TextView::new(format!("{}", e)))
+                        .dismiss_button("OK")
+                        .h_align(HAlign::Center)
+                        .align_center(),
+                );
+            }
+        }
+    } else if query == "!advance" {
+        match nr.fast_forward_state() {
+            Ok(fast_forward_message) => {
+                siv.add_layer(
+                    Dialog::around(TextView::new(fast_forward_message.to_string()))
+                        .dismiss_button("OK")
+                        .h_align(HAlign::Center)
+                        .align_center(),
+                );
+            }
+            Err(e) => {
+                siv.add_layer(
+                    Dialog::around(TextView::new(format!("{}", e)))
+                        .dismiss_button("OK")
+                        .h_align(HAlign::Center)
+                        .align_center(),
+                );
+            }
+        }
+    } else {
+        match nr.parse_input(query) {
+            Ok(parsing_result) => match parsing_result {
+                ParsingResult::NewItem(item_message) => {
+                    siv.call_on_name("room_text", |view: &mut TextView| view.append(item_message))
+                        .unwrap();
+                }
+                ParsingResult::DropItem(drop_message) => {
+                    siv.call_on_name("room_text", |view: &mut TextView| view.append(drop_message))
+                        .unwrap();
+                }
+                ParsingResult::Look(text) => {
+                    siv.add_layer(
+                        Dialog::around(TextView::new(text))
                             .dismiss_button("OK")
                             .h_align(HAlign::Center)
-                            .fixed_height(28)
-                            .fixed_width(90),
-                    )
-                    .align_center(),
-                ))
+                            .align_center(),
+                    );
+                }
+                ParsingResult::Inventory(inventory) => {
+                    siv.add_layer(
+                        Dialog::around(TextView::new(inventory))
+                            .dismiss_button("OK")
+                            .h_align(HAlign::Center)
+                            .align_center(),
+                    );
+                }
+                ParsingResult::EventSuccess(event_message) => {
+                    let EventMessage {
+                        message,
+                        message_parts,
+                        templated_words: _,
+                    } = event_message;
+                    siv.call_on_name("room_text", |view: &mut TextView| {
+                        view.set_content(message);
+                        view.append(&message_parts.get(&MessageParts::EventText).unwrap().clone());
+                    })
+                    .unwrap();
+                }
+                ParsingResult::SubjectNoEvent(subject_text) => {
+                    siv.call_on_name("room_text", |view: &mut TextView| {
+                        view.append("\n".to_owned() + &subject_text);
+                    })
+                    .unwrap();
+                }
+                ParsingResult::Help(help_text) => {
+                    siv.add_fullscreen_layer(ResizedView::with_full_screen(
+                        Layer::new(
+                            Dialog::around(TextView::new(help_text))
+                                .dismiss_button("OK")
+                                .h_align(HAlign::Center)
+                                .fixed_height(28)
+                                .fixed_width(90),
+                        )
+                        .align_center(),
+                    ));
+                }
+                ParsingResult::Quit => {
+                    siv.quit();
+                }
+            },
+            Err(e) => {
+                siv.add_layer(
+                    Dialog::around(TextView::new(format!("{}", e)))
+                        .dismiss_button("OK")
+                        .h_align(HAlign::Center)
+                        .align_center(),
+                );
             }
-            ParsingResult::Quit => siv.quit(),
-        },
-        Err(e) => siv.add_layer(
-            Dialog::around(TextView::new(format!("{}", e)))
-                .dismiss_button("OK")
-                .h_align(HAlign::Center)
-                .align_center(),
-        ),
-    };
+        }
+    }
+
     siv.call_on_name("input", |view: &mut EditView| view.set_content(""));
     siv.call_on_name(
         "scroll_area",

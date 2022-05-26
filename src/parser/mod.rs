@@ -1,4 +1,4 @@
-/// Module for the action parser. [Action](Action)
+/// Module for the action parser. [Action]
 /// are structs containing the important information
 /// needed to parse the user input.
 pub mod action;
@@ -6,9 +6,6 @@ pub mod errors;
 /// Module with the various functions used to parse
 /// the user input.
 pub mod interpreter;
-
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use self::action::Action;
 use self::errors::{EmptyInput, InvalidEvent};
@@ -24,11 +21,11 @@ use crate::ParsingResult;
 /// a `ParsingResult` which is contains the output of
 /// the game. The `ParsingResult` returned by this
 /// function that is meant to be consumed by the frontend.
-pub fn parse(state: Rc<RefCell<State>>, input: &str) -> NRResult<ParsingResult> {
+pub fn parse(state: &State, input: &str) -> NRResult<(State, ParsingResult)> {
     if !input.is_empty() {
-        let action = Action::parse(&*state.borrow(), input);
+        let action = Action::parse(state, input);
         match action.is_valid() {
-            true => process_action(&state, action),
+            true => process_action(state, action),
             false => Err(InvalidEvent.into()),
         }
     } else {

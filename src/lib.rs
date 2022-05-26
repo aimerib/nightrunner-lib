@@ -19,7 +19,7 @@
 //! use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 //! use nightrunner_lib::util::test_helpers::mock_json_data;
 //! let data = mock_json_data();
-//! let nr = NightRunnerBuilder::new().with_json_data(&data).build();
+//! let mut nr = NightRunnerBuilder::new().with_json_data(&data).build();
 //! let result = nr.parse_input("look");
 //! let json_result = nr.json_parse_input("look");
 //! assert!(result.is_ok());
@@ -39,9 +39,11 @@
 use config::{Config, State};
 use parser::interpreter::EventMessage;
 use serde::{Deserialize, Serialize};
-// #[cfg(target_arch = "wasm32")]
-// use serde::{Deserialize, Serialize};
-use std::{cell::RefCell, error::Error, rc::Rc};
+use std::{
+    error::Error,
+    fmt::{self, Display, Formatter},
+};
+extern crate console_error_panic_hook;
 use util::parse_room_text;
 /// Module containing the configuration code for this
 /// library.
@@ -98,6 +100,32 @@ pub enum ParsingResult {
     Quit,
 }
 
+impl Display for ParsingResult {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        match self {
+            ParsingResult::Help(msg) => write!(f, "{}", msg),
+            ParsingResult::Look(msg) => write!(f, "{}", msg),
+            ParsingResult::NewItem(msg) => write!(f, "{}", msg),
+            ParsingResult::DropItem(msg) => write!(f, "{}", msg),
+            ParsingResult::Inventory(msg) => write!(f, "{}", msg),
+            ParsingResult::SubjectNoEvent(msg) => write!(f, "{}", msg),
+            ParsingResult::EventSuccess(event_msg) => {
+                let EventMessage {
+                    message,
+                    message_parts,
+                    templated_words: _,
+                } = event_msg;
+                write!(f, "{}", message)?;
+                for part in message_parts.values() {
+                    write!(f, "{}", part)?;
+                }
+                Ok(())
+            }
+            ParsingResult::Quit => write!(f, "Quitting game"),
+        }
+    }
+}
+
 /// This is the main struct for this library
 /// and represents the game. It holds the state
 /// internally and passes it to the parser for
@@ -105,7 +133,9 @@ pub enum ParsingResult {
 #[wasm_bindgen]
 #[derive(Debug, PartialEq)]
 pub struct NightRunner {
-    state: Rc<RefCell<State>>,
+    state: State,
+    previous_states: Vec<State>,
+    future_states: Vec<State>,
 }
 
 /// You can use this to build a NightRunner
@@ -153,7 +183,11 @@ impl NightRunnerBuilder {
     /// if the config is invalid or missing.
     pub fn build(self) -> NightRunner {
         let state = State::init(self.config);
-        NightRunner { state }
+        NightRunner {
+            state,
+            previous_states: vec![],
+            future_states: vec![],
+        }
     }
 }
 
@@ -173,8 +207,11 @@ impl NightRunner {
     /// the input string to this function and it will return
     /// a result that can be used on the front-end to display
     /// the game to the user.
-    pub fn parse_input(&self, input: &str) -> NRResult<ParsingResult> {
-        parser::parse(self.state.clone(), input)
+    pub fn parse_input(&mut self, input: &str) -> NRResult<ParsingResult> {
+        let (new_state, parsing_result) = parser::parse(&self.state, input)?;
+        self.previous_states.push(self.state.clone());
+        self.state = new_state;
+        Ok(parsing_result)
     }
     /// This is the main function that executes the game. Pass
     /// the input string to this function and it will return
@@ -183,32 +220,62 @@ impl NightRunner {
     /// Unlike the `parse_input` function, this function will
     /// return the result in JSON format. This is useful for
     /// front-ends that can't integrate with a rust library.
-    pub fn json_parse_input(&self, input: &str) -> String {
-        let result = parser::parse(self.state.clone(), input);
-        let json = match result {
-            Ok(ok) => serde_json::to_string(&ok).unwrap(),
+    pub fn json_parse_input(&mut self, input: &str) -> String {
+        let result = parser::parse(&self.state, input);
+        match result {
+            Ok((new_state, ok)) => {
+                self.previous_states.push(self.state.clone());
+                self.state = new_state;
+                serde_json::to_string(&ok).unwrap()
+            }
             Err(err) => format!(
                 "{{\"error\":{}}}",
                 serde_json::to_string(&err.to_string()).unwrap()
             ),
-        };
-        json
+        }
+    }
+    /// Rewinds the game state to the previous state.
+    /// This is useful for undoing actions in the game.
+    /// The state is saved in a stack, so you can rewind
+    /// multiple times.
+    pub fn rewind_state(&mut self) -> NRResult<ParsingResult> {
+        if let Some(state) = self.previous_states.pop() {
+            self.future_states.push(self.state.clone());
+            self.state = state;
+            Ok(ParsingResult::Look("Rewound to previous state".to_string()))
+        } else {
+            Err("No previous state to rewind to".into())
+        }
+    }
+    /// Fast forwards the game state to the next state.
+    /// This is useful for redoing actions in the game.
+    /// The state is saved in a stack, so you can fast
+    /// forward multiple times.
+    pub fn fast_forward_state(&mut self) -> NRResult<ParsingResult> {
+        if let Some(state) = self.future_states.pop() {
+            self.previous_states.push(self.state.clone());
+            self.state = state;
+            Ok(ParsingResult::Look(
+                "Fast forwarded to next state".to_string(),
+            ))
+        } else {
+            Err("No future state to fast forward to".into())
+        }
     }
     /// Returns the string with the game intro text. This can
     /// be used to display the game intro to the user, but isn't
     /// required.
     pub fn game_intro(&self) -> String {
-        self.state.borrow().config.intro.clone()
+        self.state.config.intro.clone()
     }
     /// Returns the text for the very first room of the game.
     ///
     /// Since there is no input to parse when the game starts,
     /// this function should be used to retrieve that text instead.
     pub fn first_room_text(&self) -> NRResult<EventMessage> {
-        let narrative_id = self.state.borrow().rooms[0].narrative;
+        let narrative_id = self.state.rooms[0].narrative;
         let narrative_text = self
             .state
-            .borrow()
             .config
             .narratives
             .iter()
@@ -216,12 +283,7 @@ impl NightRunner {
             .unwrap()
             .text
             .clone();
-        let event_message = parse_room_text(
-            self.state.borrow().clone(),
-            narrative_text,
-            "".to_string(),
-            None,
-        )?;
+        let event_message = parse_room_text(&self.state, narrative_text, "".to_string(), None)?;
         Ok(event_message)
     }
 }
@@ -281,9 +343,14 @@ impl NightRunner {
     /// config should be a JSON string.
     #[wasm_bindgen(constructor)]
     pub fn new(config: &str) -> NightRunner {
+        console_error_panic_hook::set_once();
         let config = Config::from_json(config);
         let state = State::init(config);
-        NightRunner { state }
+        NightRunner {
+            state,
+            previous_states: vec![],
+            future_states: vec![],
+        }
     }
     /// This is the main function that executes the game. Pass
     /// the input string to this function and it will return
@@ -293,10 +360,12 @@ impl NightRunner {
     /// the result in JSON format. The conversion of the result
     /// to JSON is done by the `JsValue::from_serde` function from
     /// wasm_bindgen.
-    pub fn parse(&self, input: &str) -> Result<JsValue, JsError> {
-        let result = parser::parse(self.state.clone(), input);
+    pub fn parse(&mut self, input: &str) -> Result<JsValue, JsError> {
+        let result = parser::parse(&self.state, input);
         match result {
-            Ok(ok) => {
+            Ok((new_state, ok)) => {
+                self.previous_states.push(self.state.clone());
+                self.state = new_state;
                 let message = match ok {
                     ParsingResult::Look(msg) => JsMessage::Look(msg),
                     ParsingResult::Help(msg) => JsMessage::Help(msg),
@@ -307,9 +376,44 @@ impl NightRunner {
                     ParsingResult::EventSuccess(event_msg) => JsMessage::EventSuccess(event_msg),
                     ParsingResult::Quit => JsMessage::NoOp,
                 };
-                Ok(JsValue::from_serde(&message).unwrap())
+                Ok(serde_wasm_bindgen::to_value(&message)?)
+                // Ok(JsValue::from_serde(&message).unwrap())
             }
             Err(err) => Err(JsError::new(&err.to_string())),
+        }
+    }
+
+    /// Rewinds the game state to the previous state.
+    /// This is useful for undoing actions in the game.
+    /// The state is saved in a stack, so you can rewind
+    /// multiple times.
+    pub fn rewind_state(&mut self) -> Result<JsValue, JsError> {
+        match self.previous_states.pop() {
+            Some(state) => {
+                self.future_states.push(self.state.clone());
+                self.state = state;
+                Ok(serde_wasm_bindgen::to_value(&JsMessage::Look(
+                    "Rewound to previous state".to_string(),
+                ))?)
+            }
+            None => Err(JsError::new("No previous state to rewind to")),
+        }
+    }
+
+    /// Fast forwards the game state to the next state.
+    /// This is useful for redoing actions in the game.
+    /// The state is saved in a stack, so you can fast
+    /// forward multiple times.
+    pub fn fast_forward_state(&mut self) -> Result<JsValue, JsError> {
+        match self.future_states.pop() {
+            Some(state) => {
+                self.previous_states.push(self.state.clone());
+                self.state = state;
+                Ok(serde_wasm_bindgen::to_value(&JsMessage::Look(
+                    "Fast forwarded to next state".to_string(),
+                ))?)
+            }
+            None => Err(JsError::new("No future state to fast forward to")),
         }
     }
 
@@ -318,17 +422,16 @@ impl NightRunner {
     /// required.
     #[wasm_bindgen]
     pub fn game_intro(&self) -> String {
-        self.state.borrow().config.intro.clone()
+        self.state.config.intro.clone()
     }
     /// Returns the text for the very first room of the game.
     ///
     /// Since there is no input to parse when the game starts,
     /// this function should be used to retrieve that text instead.
     pub fn first_room_text(&self) -> Result<JsValue, JsError> {
-        let narrative_id = self.state.borrow().rooms[0].narrative.clone();
+        let narrative_id = self.state.rooms[0].narrative.clone();
         let narrative_text = self
             .state
-            .borrow()
             .config
             .narratives
             .iter()
@@ -336,13 +439,8 @@ impl NightRunner {
             .unwrap()
             .text
             .clone();
-        let event_message = parse_room_text(
-            self.state.borrow().clone(),
-            narrative_text,
-            "".to_string(),
-            None,
-        )
-        .unwrap();
-        Ok(JsValue::from_serde(&event_message).unwrap())
+        let event_message =
+            parse_room_text(&self.state, narrative_text, "".to_string(), None).unwrap();
+        Ok(serde_wasm_bindgen::to_value(&event_message)?)
     }
 }

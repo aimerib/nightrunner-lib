@@ -13,42 +13,6 @@ pub(crate) struct RoomBlueprint {
     pub(crate) subject_ids: Vec<u16>,
 }
 
-// Should I make the build implementation on RoomBlueprint or in the Room struct?
-// This could make sense in both places, but my intuition is that there is less
-// memory overhead in the Room struct since you only need to pass the variables
-// to the method once to build all the rooms, whereas the RoomBlueprint struct
-// would need to be passed to the method once for each room.
-// impl RoomBlueprint {
-//     pub(crate) fn build(self, events: &[Event], items: &[Item], subjects: &[Subject]) -> Room {
-//         let mut room = Room {
-//             id: self.id,
-//             name: self.name.clone(),
-//             description: self.description.clone(),
-//             exits: self.exits.clone(),
-//             narrative: self.narrative,
-//             subjects: vec![],
-//             stash: Storage::default(),
-//             events: vec![],
-//         };
-//         for item_id in &self.item_ids {
-//             if let Some(item) = items.iter().find(|item| item.id == *item_id) {
-//                 room.stash.add_item(item.clone());
-//             }
-//         }
-//         for subject_id in &self.subject_ids {
-//             if let Some(subject) = subjects.iter().find(|subject| subject.id == *subject_id) {
-//                 room.subjects.push(subject.clone());
-//             }
-//         }
-//         for _ in events {
-//             if let Some(event) = events.iter().find(|event| event.location == self.id) {
-//                 room.events.push(event.clone());
-//             }
-//         }
-//         room
-//     }
-// }
-
 /// This struct represents a room in the game.
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, Ord, PartialEq, PartialOrd)]
 #[serde(rename_all = "snake_case")]

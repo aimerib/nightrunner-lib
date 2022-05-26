@@ -42,7 +42,7 @@ fn it_creates_items() {
 fn it_creates_allowed_verbs_from_yaml() {
     let allowed_verbs_config = r"---
             - id: 1
-              names: 
+              names:
                 - go
               verb_function: normal";
     assert_eq!(
@@ -173,19 +173,13 @@ fn it_creates_state() {
     let state = State::init(config);
     let state2 = State::init(Config::from_path("fixtures/"));
     let state_object = mock_state();
+    assert_eq!(state, state2, "state and state2 should be the same");
     assert_eq!(
-        *state.borrow(),
-        *state2.borrow(),
-        "state and state2 should be the same"
-    );
-    assert_eq!(
-        *state.borrow(),
-        state_object,
+        state, state_object,
         "state and state_object should be the same"
     );
     assert_eq!(
-        *state2.borrow(),
-        state_object,
+        state2, state_object,
         "state2 and state_object should be the same"
     );
 }

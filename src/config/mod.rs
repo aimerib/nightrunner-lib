@@ -4,7 +4,7 @@ pub(crate) mod movements;
 pub(crate) mod prepositions;
 pub(crate) mod rooms;
 
-use crate::parser::errors::NoItem;
+use crate::parser::errors::{InvalidRoom, InvalidSubject, NoItem};
 use crate::NRResult;
 
 use self::determiners::AllowedDeterminers;
@@ -14,8 +14,6 @@ use self::prepositions::AllowedPrepositions;
 use self::rooms::{Room, RoomBlueprint};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 /// This struct holds the texts used to display the story
 /// in the game. These narratives are used to display
@@ -91,7 +89,7 @@ pub struct Verb {
     /// The function that the verb serves. Since some verbs are reserved
     /// for specific functions, this field is used to determine what
     /// function the verb serves, and this allows verbs to be named
-    /// anything. For the possible functions see the [VerbFunction](VerbFunction) enum.
+    /// anything. For the possible functions see the [VerbFunction] enum.
     pub verb_function: VerbFunction,
 }
 impl std::fmt::Display for Verb {
@@ -209,11 +207,10 @@ impl std::fmt::Display for Subject {
 /// let event = Event {
 ///   id: 1,
 ///   location: 1,
-///   name: "Talking to subject 1".to_string(),
+///   name: "Talking to subject 2".to_string(),
 ///   description: "This event happens when you talk to subject 2.".to_string(),
 ///   destination: None,
 ///   narrative: Some(2),
-///   // here verb id 3 has to be marked with VerbFunction::Talk
 ///   required_verb: Some(3),
 ///   required_subject: Some(2),
 ///   required_item: None,
@@ -222,6 +219,10 @@ impl std::fmt::Display for Subject {
 ///   remove_old_narrative: false,
 ///   remove_item: None,
 ///   required_events: Vec::new(),
+///   add_subject: None,
+///   move_subject_to_location: None,
+///   narrative_after: None,
+///   remove_subject: false,
 /// };
 /// ```
 ///
@@ -247,6 +248,10 @@ impl std::fmt::Display for Subject {
 ///   // here item id 3 would be removed after the event is completed
 ///   remove_item: Some(3),
 ///   required_events: Vec::new(),
+///   add_subject: None,
+///   move_subject_to_location: None,
+///   narrative_after: None,
+///   remove_subject: false,
 /// };
 /// ```
 
@@ -307,6 +312,21 @@ pub struct Event {
     /// the event also moves the subject to a different room,
     /// this is the new room id.
     pub move_subject_to_location: Option<u16>,
+}
+
+impl Event {
+    /// Checks if a task is completed.
+    ///
+    /// This function returns true if the task is completed, and false otherwise.
+    pub fn is_completed(&self) -> bool {
+        self.completed
+    }
+    /// Marks an event as completed.
+    ///
+    /// This function sets the `completed` field of the event to `true`.
+    pub fn complete(&mut self) {
+        self.completed = true;
+    }
 }
 
 /// This struct represents an item in the game.
@@ -819,7 +839,7 @@ impl State {
     /// let config2 = Config::from_json(&json_data);
     /// let state2 = State::init(config2);
     /// ```
-    pub fn init(config: Config) -> Rc<RefCell<Self>> {
+    pub fn init(config: Config) -> Self {
         let items = &config.items;
         let subjects = &config.subjects;
         let events = &config.events;
@@ -880,7 +900,8 @@ impl State {
         //         }
         //     }
         // }
-        let state = Self {
+        // let state =
+        Self {
             input: String::new(),
             current_room: 1,
             player: Player {
@@ -888,8 +909,8 @@ impl State {
             },
             rooms,
             config,
-        };
-        Rc::new(RefCell::new(state))
+        }
+        // Rc::new(RefCell::new(state))
     }
     /// Returns a clone of the current narrative for the current room.
     pub fn get_narrative(&self) -> Narrative {
@@ -914,6 +935,65 @@ impl State {
             .find(|r| r.id == self.current_room)
             .unwrap();
         room.narrative = narrative_id;
+    }
+    /// Checks if an event is completed.
+    pub fn is_event_completed(&self, event_id: u16) -> bool {
+        for room in self.rooms.iter() {
+            if let Some(event) = room.events.iter().find(|e| e.id == event_id) {
+                return event.completed;
+            }
+        }
+        false
+        // self.config
+        //     .events
+        //     .iter()
+        //     .find(|e| e.id == event_id)
+        //     .map(|e| e.completed)
+        //     .unwrap_or(false)
+    }
+    /// Marks an event as completed.
+    pub fn complete_event(&mut self, event_id: u16) {
+        for room in self.rooms.iter_mut() {
+            if let Some(event) = room.events.iter_mut().find(|e| e.id == event_id) {
+                event.completed = true;
+            }
+        }
+    }
+    /// Moves a subject to a different room.
+    pub fn move_subject(&mut self, subject_id: u16, location: u16) -> NRResult<()> {
+        self.remove_subject(subject_id)?;
+        let subject = self
+            .config
+            .subjects
+            .iter()
+            .find(|s| s.id == subject_id)
+            .ok_or(InvalidSubject)?;
+        self.rooms
+            .iter_mut()
+            .find(|r| r.id == location)
+            .ok_or(InvalidRoom)?
+            .add_subject(subject.clone());
+        Ok(())
+    }
+    /// Removes a subject from the current room.
+    pub fn remove_subject(&mut self, subject_id: u16) -> NRResult<()> {
+        let current_room = self
+            .rooms
+            .iter_mut()
+            .find(|r| r.id == self.current_room)
+            .ok_or(InvalidRoom)?;
+        current_room.remove_subject(subject_id);
+        Ok(())
+    }
+    /// Adds a subject to the current room.
+    pub fn add_subject(&mut self, subject: Subject) -> NRResult<()> {
+        let current_room = self
+            .rooms
+            .iter_mut()
+            .find(|r| r.id == self.current_room)
+            .ok_or(InvalidRoom)?;
+        current_room.add_subject(subject);
+        Ok(())
     }
 }
 

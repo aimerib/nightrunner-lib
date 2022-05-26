@@ -22,7 +22,7 @@
   exits:
     - room_id: 1
       direction: north
-  item_ids: []
+  item_ids: [3]
   room_events: [5]
   narrative: 2
   subject_ids: [2]

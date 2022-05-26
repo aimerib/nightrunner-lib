@@ -1,7 +1,8 @@
 [package]
 name = "nightrunner_lib"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
+resolver="2"
 authors = ["Aimeri Baddouh <aimeri@baddouh.me>"]
 description = "A parser library for making text adventure games"
 license = "Apache-2.0"
@@ -11,6 +12,7 @@ categories = ["parsing"]
 keywords = ["engine", "parsing", "wasm", "game"]
 readme = "README.md"
 
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -18,22 +20,22 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.8"
 serde_json = "1.0"
 regex = "1"
-wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.92", features = ["serde-serialize"] }
+serde-wasm-bindgen = "0.6.5"
 rand = "0.8.5"
-getrandom = { version = "0.2", features = ["js"] }
+getrandom = { version = "0.2.12", features = ["js"] }
+serde_yaml = "0.9.33"
+console_error_panic_hook = "0.1.7"
 
 [dev-dependencies]
-pretty_assertions = "1.1.0"
-wasm-bindgen-test = "0.3.29"
+pretty_assertions = "1.4.0"
+wasm-bindgen-test = "0.3.42"
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-cursive = { version = "0.17.0", default-features = false, features = [
-  "crossterm-backend",
-] }
+cursive = { version = "0.20.0", default-features = false, features = ["crossterm-backend"] }
 cursive-aligned-view = "0.6.0"
 
 [[example]]
