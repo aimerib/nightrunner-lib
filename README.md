@@ -36,6 +36,13 @@ assert_eq!(json_result,
 );
 ```
 
+To run a rust example run
+```shell
+cargo run --example cursive_example
+```
+
+This example should give you a good idea on how to consume the library in rust, and how to structure you front-end for your game.
+
 ## Using the Wasm library
 
 Add the nightrunner_lib package from npm to your repository:
@@ -50,7 +57,8 @@ yarn add @nightrunner/nightrunner_lib
 
 You will need a bundler to use this package. Currently I recommend using
 Vite. For examples on how to use Vite with this library check out the
-`examples/wasm` folder in the repository.
+`examples/wasm` folder in the repository. Another popular and well supported
+bundler is webpack.
 
 ---
 
@@ -63,17 +71,15 @@ of the game when creating a new instance of the `NightRunner` class in JavaScrip
 
 ### Example:
 
-```js
+```ts
 // This data can also be retrieved from an api endpoint with the browser
 // fetch API.
 import data from "./data.json";
-import init, { NightRunner } from "@nightrunner/nightrunner_lib";
-
-await init();
+import { NightRunner } from "@nightrunner/nightrunner_lib";
 
 // Load the NightRunner library.
 // The NightRunner class expects stringified JSON data.
-const nr: NightRunner = await new NightRunner(JSON.stringify(data));
-let result = nr.parse("look");
+const engine: NightRunner = new NightRunner(JSON.stringify(data));
+let result = engine.parse("look");
 // {"messageType":"look","data":"first room\n\nHere you see: \nan item1\nan item2\nsubject1"}
 ```

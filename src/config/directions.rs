@@ -1,10 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 /// Possible directions for a movement.
-/// The parser currently only supports
-/// cardinal directions but will be extended
-/// to support other directions such as
-/// "up" or "left" in the future.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq)]
 #[serde(rename_all = "snake_case")]
 pub struct AllowedDirections {
@@ -13,7 +9,7 @@ pub struct AllowedDirections {
 
 impl AllowedDirections {
     pub(crate) fn init() -> AllowedDirections {
-        let directions = vec![
+        let directions = [
             "north", "south", "east", "west", "up", "down", "left", "right",
         ]
         .iter()
@@ -42,6 +38,12 @@ pub enum Directions {
     #[serde(rename = "west")]
     /// Move to the west.
     West,
+    #[serde(rename = "up")]
+    /// Move up.
+    Up,
+    #[serde(rename = "down")]
+    /// Move down.
+    Down,
 }
 impl std::fmt::Display for Directions {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -50,6 +52,8 @@ impl std::fmt::Display for Directions {
             Directions::South => write!(f, "south"),
             Directions::East => write!(f, "east"),
             Directions::West => write!(f, "west"),
+            Directions::Up => write!(f, "up"),
+            Directions::Down => write!(f, "down"),
         }
     }
 }

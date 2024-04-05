@@ -42,7 +42,7 @@ fn it_creates_items() {
 fn it_creates_allowed_verbs_from_yaml() {
     let allowed_verbs_config = r"---
             - id: 1
-              names: 
+              names:
                 - go
               verb_function: normal";
     assert_eq!(
@@ -72,7 +72,7 @@ fn it_creates_subjects() {
     );
 }
 #[test]
-fn it_creates_rooms() {
+fn it_creates_room_blueprints() {
     let rooms_config = r"---
           - id: 1
             name: text
@@ -80,19 +80,17 @@ fn it_creates_rooms() {
             exits:
                 - room_id: 2
                   direction: south
-            stash:
-                items: []
-                item_ids:
-                    - 1
-                    - 2
+            item_ids:
+                - 1
+                - 2
             room_events:
                 - 3
             narrative: 2
-            subjects:
+            subject_ids:
                 - 4";
 
     assert_eq!(
-        vec![Room {
+        vec![RoomBlueprint {
             id: 1,
             name: String::from("text"),
             description: String::from("text"),
@@ -100,15 +98,11 @@ fn it_creates_rooms() {
                 room_id: 2,
                 direction: directions::Directions::South,
             }],
-            stash: Storage {
-                items: Vec::new(),
-                item_ids: vec![1, 2],
-            },
-            room_events: vec![3],
+            item_ids: vec![1, 2],
             narrative: 2,
-            subjects: vec![4],
+            subject_ids: vec![4],
         },],
-        serde_yaml::from_str::<Vec<Room>>(rooms_config).unwrap()
+        serde_yaml::from_str::<Vec<RoomBlueprint>>(rooms_config).unwrap()
     );
 }
 #[test]
@@ -136,7 +130,11 @@ fn it_creates_events() {
             add_item: ~
             remove_old_narrative: false
             remove_item: ~
-            required_events: []";
+            required_events: []
+            add_subject: ~
+            remove_subject: false
+            move_subject_to_location: ~
+            narrative_after: ~";
     assert_eq!(
         vec![Event {
             id: 1,
@@ -153,6 +151,10 @@ fn it_creates_events() {
             remove_old_narrative: false,
             remove_item: None,
             required_events: vec![],
+            add_subject: None,
+            remove_subject: false,
+            move_subject_to_location: None,
+            narrative_after: None,
         },],
         serde_yaml::from_str::<Vec<Event>>(events_config).unwrap()
     );
@@ -170,19 +172,13 @@ fn it_creates_state() {
     let state = State::init(config);
     let state2 = State::init(Config::from_path("fixtures/"));
     let state_object = mock_state();
+    assert_eq!(state, state2, "state and state2 should be the same");
     assert_eq!(
-        *state.borrow(),
-        *state2.borrow(),
-        "state and state2 should be the same"
-    );
-    assert_eq!(
-        *state.borrow(),
-        state_object,
+        state, state_object,
         "state and state_object should be the same"
     );
     assert_eq!(
-        *state2.borrow(),
-        state_object,
+        state2, state_object,
         "state2 and state_object should be the same"
     );
 }

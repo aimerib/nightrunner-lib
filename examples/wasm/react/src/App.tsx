@@ -35,11 +35,11 @@ type ActionResult = {
   messageType:
     | "look"
     | "inventory"
-    | "dropItem"
-    | "newItem"
+    | "drop_item"
+    | "new_item"
     | "quit"
     | "help"
-    | "subjectNoEvent";
+    | "subject_no_event";
   data: string;
 };
 
@@ -49,13 +49,9 @@ type ActionResult = {
  * @param {EventSuccess} data -  When the return messageType from the parser is an `EventSuccess`, the value will be an object.
  */
 type EventResult = {
-  messageType: "eventSuccess";
+  messageType: "event_success";
   data: EventSuccess;
 };
-
-/**
- * @typedef { {firstName: string, lastName: string} } BrokenName
- */
 
 /**
  * An EventSuccess type is an object that contains the result of an event.
@@ -92,11 +88,8 @@ type EventSuccess = {
  * @param {string} exits - The exits of the current room, their directions, and a description of the room they lead to.
  *
  */
-type MessageParts = {
-  room_text: string;
-  event_text: string;
-  exits: string;
-};
+type MessagePartKeys = "room_text" | "event_text" | "exits";
+type MessageParts = Map<MessagePartKeys, string>;
 
 /**
  * A successful result will be either a string corresponding to the action result
@@ -135,10 +128,10 @@ function App({ engine }: AppProps) {
   const firstRoomData: EventSuccess = engine.first_room_text();
   const [input, setInput] = useState("");
   const [roomText, setRoomText] = useState(
-    firstRoomData.message_parts.room_text
+    firstRoomData.message_parts.get("room_text") || ""
   );
   const [eventText, setEventText] = useState<string[]>([]);
-  const [exits, setExits] = useState(firstRoomData.message_parts.exits);
+  const [exits, setExits] = useState(firstRoomData.message_parts.get("exits") || "");
   const [message, setMessage] = useState(firstRoomData.message);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -158,30 +151,28 @@ function App({ engine }: AppProps) {
     switch (result.messageType) {
       case "look":
       case "inventory":
-      case "dropItem":
-      case "newItem":
-      case "subjectNoEvent":
-        if (eventText.length > 0 && result.data.length > 0) {
+      case "drop_item":
+      case "new_item":
+      case "subject_no_event":
+        if (eventText?.length > 0 && result?.data?.length > 0) {
           eventText.push("\n");
         }
-        if (result.data.length > 0) {
+        if (result?.data?.length > 0) {
           eventText.push(result.data);
         }
         break;
       case "help":
         alert(result.data);
         break;
-      case "eventSuccess":
-        const {
-          room_text: new_room_text,
-          exits: new_exits,
-          event_text: new_event_text,
-        } = result.data.message_parts;
+      case "event_success":
+        const new_room_text = result.data.message_parts.get("room_text") || roomText;
+        const new_event_text = result.data.message_parts.get("event_text") || "";
+        const new_exits = result.data.message_parts.get("exits") || exits;
         setRoomText(new_room_text);
         setExits(new_exits);
-        setMessage(result.data.message);
-        if (new_event_text.length > 0) {
-          setEventText([new_event_text]);
+        setMessage(message + "\n\n" + result.data.message);
+        if (new_event_text?.length > 0) {
+          setEventText([...eventText, new_event_text]);
         } else {
           setEventText([]);
         }
@@ -251,7 +242,7 @@ function App({ engine }: AppProps) {
     );
   };
 
-  let test = [
+  let displays = [
     renderSingleArea(),
     renderSeparateAreas(),
     renderMessageNoParts(),
@@ -260,8 +251,7 @@ function App({ engine }: AppProps) {
   return (
     <div className="App">
       <header className="App-header">
-        {test[currentIndex]}
-        {/* {showSplitDisplay ? renderSeparateAreas() : renderSingleArea()} */}
+        {displays[currentIndex]}
         <form onSubmit={submitAction}>
           <input
             type="text"
@@ -274,7 +264,7 @@ function App({ engine }: AppProps) {
         <button
           style={{ marginTop: "15px" }}
           onClick={() => {
-            if (currentIndex < test.length - 1) {
+            if (currentIndex < displays.length - 1) {
               setCurrentIndex(currentIndex + 1);
             } else {
               setCurrentIndex(0);

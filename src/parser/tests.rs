@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use super::*;
 use crate::{
     config::{Config, State},
-    parser::{
-        errors::InvalidEvent,
-        interpreter::{EventMessage, MessageParts},
-    },
+    parser::interpreter::{EventMessage, MessageParts},
 };
 #[cfg(test)]
 use pretty_assertions::assert_eq;
@@ -15,12 +12,12 @@ use pretty_assertions::assert_eq;
 fn it_parses_single_verb() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let mut result = parse(state.clone(), "quit");
-    assert_eq!(result.unwrap(), ParsingResult::Quit);
+    let mut result = parse(&state, "quit");
+    assert_eq!(result.unwrap().1, ParsingResult::Quit);
 
-    result = parse(state, "look");
+    result = parse(&state, "look");
     assert_eq!(
-        result.unwrap(),
+        result.unwrap().1,
         ParsingResult::Look(
             "first room\n\nHere you see: \nan item1\nan item2\nsubject1".to_string()
         )
@@ -30,19 +27,21 @@ fn it_parses_single_verb() {
 fn it_parses_verb_and_item_or_subject() {
     let config = Config::from_path("fixtures/");
     let state = State::init(config);
-    let mut result = parse(state.clone(), "take item2");
+    let mut result = parse(&state, "take item2");
     let mut message_parts = HashMap::new();
     assert!(result.is_ok());
+    let (new_state, parsing_result) = result.unwrap();
     assert_eq!(
-        result.unwrap(),
+        parsing_result,
         ParsingResult::NewItem("\nYou now have a item2\n".to_string())
     );
     assert_eq!(
-        state.borrow().player.inventory.items[0].name,
+        new_state.player.inventory.items[0].name,
         "item2".to_string()
     );
 
-    result = parse(state.clone(), "talk subject1");
+    result = parse(&new_state, "talk subject1");
+    let (new_state, parsing_result) = result.unwrap();
     message_parts.insert(MessageParts::RoomText, "text".to_string());
     message_parts.insert(MessageParts::EventText, "".to_string());
     message_parts.insert(
@@ -50,7 +49,7 @@ fn it_parses_verb_and_item_or_subject() {
         "Exits:\nto the south you see second room".to_string(),
     );
     assert_eq!(
-        result.unwrap(),
+        parsing_result,
         ParsingResult::EventSuccess(EventMessage {
             message: "text\n\n\nExits:\nto the south you see second room".to_string(),
             templated_words: vec![],
@@ -58,23 +57,24 @@ fn it_parses_verb_and_item_or_subject() {
         })
     );
 
-    result = parse(state.clone(), "go south");
-    message_parts.insert(MessageParts::RoomText, "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.".to_string());
+    result = parse(&new_state, "go south");
+    let (new_state, parsing_result) = result.unwrap();
+    message_parts.insert(MessageParts::RoomText, "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.".to_string());
     message_parts.insert(MessageParts::EventText, "".to_string());
     message_parts.insert(
         MessageParts::Exits,
         "Exits:\nto the north you see first room".to_string(),
     );
     assert_eq!(
-        result.unwrap(),
+        parsing_result,
         ParsingResult::EventSuccess(EventMessage {
-            message: "this is a templated which exists in the game item1.\n\nthis is a templated subject that exists in the game subject1.\n\n\nExits:\nto the north you see first room".to_string(),
-            templated_words: vec![],
+            message: "this is a templated which exists in the game item3.\n\nthis is a templated subject that exists in the game subject2.\n\n\nExits:\nto the north you see first room".to_string(),
+            templated_words: vec!["item3".to_string(), "subject2".to_string()],
             message_parts,
         })
     );
 
-    result = parse(state, "give item2 to subject2");
+    result = parse(&new_state, "give item2 to subject2");
     // There is no event for player giving item2 to subject2
     // so we expect an error. InvalidEvent should be used to
     // indicate that the event is not valid, and how to handle
@@ -84,5 +84,8 @@ fn it_parses_verb_and_item_or_subject() {
     // For convenience, this error wraps the action as it was
     // interpreted by the parser from the input. This is useful
     // when writing custom logic for the front-end.
-    assert_eq!(result.unwrap_err().to_string(), InvalidEvent.to_string());
+    assert_eq!(
+        result.unwrap().1,
+        ParsingResult::SubjectNoEvent("default text".to_string()),
+    );
 }

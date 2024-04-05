@@ -12,15 +12,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+      - uses: actions/checkout@v4
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -30,23 +24,13 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+        run: cargo build
       - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
       - name: Check fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
       - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: cargo clippy -- -D warnings
   wasm:
     needs: ci
     name: Test WASM library
@@ -54,17 +38,12 @@ jobs:
       CARGO_INCREMENTAL: 0
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: wasm32-unknown-unknown
-          override: true
-      - uses: jetli/wasm-pack-action@v0.3.0
+      - uses: actions/checkout@v4
+      - name: Setup wasm-pack
+        run: cargo install wasm-pack
       - uses: browser-actions/setup-firefox@latest
       - name: Cache dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
