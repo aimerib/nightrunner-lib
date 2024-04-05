@@ -13,6 +13,6 @@
     "vite-plugin-wasm": "^3.3.0"
   },
   "dependencies": {
-    "@nightrunner/nightrunner_lib": "^0.3.0"
+    "@nightrunner/nightrunner_lib": "^0.3.1"
   }
 }

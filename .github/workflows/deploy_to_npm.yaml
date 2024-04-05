@@ -25,13 +25,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
       - name: Package file
-        run: wasm-pack build --target web --scope nightrunner --release
+        run: wasm-pack build --scope nightrunner --release
       - name: Deploy to NPM
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
           package: ./pkg/package.json
           access: public
-          check-version: true

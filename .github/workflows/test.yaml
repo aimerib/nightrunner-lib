@@ -22,7 +22,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
       - name: Build
         run: cargo build
       - name: Test
@@ -51,6 +51,6 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.toml') }}
       - name: Test WASM library
         run: wasm-pack test --headless --firefox -- --test web
