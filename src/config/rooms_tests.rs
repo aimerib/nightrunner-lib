@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     config::directions::Directions,
-    config::{rooms::Room, Item},
+    config::types::{Exit, Item, Subject, Room},
 };
 #[cfg(test)]
 use pretty_assertions::assert_eq;
@@ -12,7 +12,7 @@ fn it_builds_a_room() {
         id: 1,
         name: "Test Room".to_string(),
         description: "This is a test room.".to_string(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             direction: Directions::North,
             room_id: 2,
         }],
@@ -35,7 +35,7 @@ fn it_builds_a_room() {
         id: 1,
         name: "Test Room".to_owned(),
         description: "This is a test room.".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],
@@ -63,7 +63,7 @@ fn it_can_move() {
         id: 1,
         name: "text".to_owned(),
         description: "text".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],
@@ -81,7 +81,7 @@ fn it_adds_item() {
         id: 1,
         name: "text".to_owned(),
         description: "text".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],
@@ -112,7 +112,7 @@ fn it_removes_item() {
         id: 1,
         name: "text".to_owned(),
         description: "text".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],
@@ -146,7 +146,7 @@ fn it_adds_subject() {
         id: 1,
         name: "text".to_owned(),
         description: "text".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],
@@ -166,7 +166,7 @@ fn it_removes_subject() {
         id: 1,
         name: "text".to_owned(),
         description: "text".to_owned(),
-        exits: vec![Exits {
+        exits: vec![Exit {
             room_id: 2,
             direction: Directions::North,
         }],

@@ -28,6 +28,7 @@ rand = "0.8.5"
 getrandom = { version = "0.2.12", features = ["js"] }
 serde_yaml = "0.9.33"
 console_error_panic_hook = "0.1.7"
+tsify = { git = "https://github.com/sisou/tsify", branch = "sisou/comments", features = ["js"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

@@ -1,0 +1,23 @@
+- id: 1
+  name: room 1
+  description: first room
+  exits:
+  - room_id: 2
+    direction: south
+  item_ids:
+  - 1
+  - 2
+  narrative: 1
+  subject_ids:
+  - 1
+- id: 2
+  name: room 2
+  description: second room
+  exits:
+  - room_id: 1
+    direction: north
+  item_ids:
+  - 3
+  narrative: 2
+  subject_ids:
+  - 2

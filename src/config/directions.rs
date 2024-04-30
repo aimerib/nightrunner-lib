@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use tsify::Tsify;
 
 /// Possible directions for a movement.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Eq)]
@@ -23,7 +24,8 @@ impl AllowedDirections {
 /// In the future this will be extended
 /// so inputs like "climb down" or "go
 /// left" will be supported.
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Tsify, Clone, Debug, Deserialize, Serialize, Eq, Ord, PartialEq, PartialOrd)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(rename_all = "snake_case")]
 pub enum Directions {
     #[serde(rename = "east")]

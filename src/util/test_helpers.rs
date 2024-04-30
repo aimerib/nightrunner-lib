@@ -3,8 +3,9 @@ use crate::config::{
     directions::{AllowedDirections, Directions},
     movements::AllowedMovements,
     prepositions::AllowedPrepositions,
-    rooms::{Exits, RoomBlueprint},
-    Config, Event, Item, Narrative, State, Subject, Verb, VerbFunction,
+    types::{Event, Item, Narrative, Exit, Subject, Verb, VerbFunction, RoomBlueprint},
+    Config,
+    State
 };
 
 /// Returns a sample Config that can be used during testing.
@@ -126,7 +127,7 @@ pub fn mock_config() -> Config {
                 id: 1,
                 name: String::from("room 1"),
                 description: String::from("first room"),
-                exits: vec![Exits {
+                exits: vec![Exit {
                     room_id: 2,
                     direction: Directions::South,
                 }],
@@ -138,7 +139,7 @@ pub fn mock_config() -> Config {
                 id: 2,
                 name: String::from("room 2"),
                 description: String::from("second room"),
-                exits: vec![Exits {
+                exits: vec![Exit {
                     room_id: 1,
                     direction: Directions::North,
                 }],

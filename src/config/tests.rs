@@ -1,5 +1,5 @@
 use crate::{
-    config::rooms::Exits,
+    config::types::Exit,
     util::test_helpers::{self, mock_config, mock_state},
 };
 #[cfg(test)]
@@ -94,7 +94,7 @@ fn it_creates_room_blueprints() {
             id: 1,
             name: String::from("text"),
             description: String::from("text"),
-            exits: vec![Exits {
+            exits: vec![Exit {
                 room_id: 2,
                 direction: directions::Directions::South,
             }],

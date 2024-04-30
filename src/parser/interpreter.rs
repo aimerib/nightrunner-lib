@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::config::directions::Directions;
-use crate::config::rooms::Room;
+use crate::config::types::Room;
 use crate::config::{Event, Item, State, Subject, VerbFunction};
 use crate::parser::action::{Action, ActionType};
 use crate::parser::errors::*;

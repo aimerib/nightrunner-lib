@@ -53,6 +53,7 @@ pub mod config;
 pub mod parser;
 /// Helper functions.
 pub mod util;
+
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
