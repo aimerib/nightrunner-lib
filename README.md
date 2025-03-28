@@ -1,4 +1,8 @@
 # nightrunner-lib
+![Embedded in cursive](https://github.com/user-attachments/assets/021abbe8-ac34-4345-8363-4da8cd2886c0)
+![Embedded in cursive 2](https://github.com/user-attachments/assets/22bc5b6a-4d28-4d10-8af1-9ff12d29cc3f)
+![Embedded in React](https://github.com/user-attachments/assets/89c1e7c5-8cf2-422f-8463-3297dbd508c2)
+
 
 This library is a text-adventure game engine that can be used to create
 text based adventure games. It is designed to be used with a front-end
