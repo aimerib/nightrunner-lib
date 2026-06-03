@@ -104,7 +104,7 @@ pub fn player_get_item(state: &State, item: Item) -> NRResult<(State, ParsingRes
         .rooms
         .iter_mut()
         .find(|room| room.id == current_room_id)
-        .unwrap();
+        .ok_or(NoRoom)?;
 
     match current_room.stash.remove_item(item) {
         Ok(item) => {
@@ -180,7 +180,7 @@ pub fn display_help(state: &State) -> NRResult<ParsingResult> {
     let valid_verbs = state.config.allowed_verbs.clone();
     let valid_verbs_string = &valid_verbs
         .iter()
-        .map(|verb| verb.names[0].clone())
+        .filter_map(|verb| verb.names.first().cloned())
         .collect::<Vec<String>>()
         .join(", ")[..];
     let help_text: String = "
@@ -339,18 +339,17 @@ pub fn parse_room_text(
 
 fn process_templated_text(text: String, items_and_subjects: &[String]) -> (String, Vec<String>) {
     let mut templated_words: Vec<String> = Vec::new();
+    let re = Regex::new(r"\{(.*?)\}").expect("the template regex is a valid hardcoded pattern");
     let processed_text = text
         .lines()
         .map(|sentence| {
             let mut extracted_text = sentence.to_string();
-            let re = Regex::new(r"\{(.*?)\}").unwrap();
             let templated_word_captures: TemplateCaptures = re
                 .captures_iter(sentence)
-                .map(|cap| {
-                    let start = &cap.get(0).unwrap().start();
-                    let end = &cap.get(0).unwrap().end();
-                    let text = cap.get(1).unwrap().as_str();
-                    (start.to_owned(), end.to_owned(), text.to_owned())
+                .filter_map(|cap| {
+                    let whole = cap.get(0)?;
+                    let inner = cap.get(1)?;
+                    Some((whole.start(), whole.end(), inner.as_str().to_owned()))
                 })
                 .collect();
 

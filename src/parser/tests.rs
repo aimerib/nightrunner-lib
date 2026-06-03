@@ -10,7 +10,7 @@ use pretty_assertions::assert_eq;
 
 #[test]
 fn it_parses_single_verb() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let mut result = parse(&state, "quit");
     assert_eq!(result.unwrap().1, ParsingResult::Quit);
@@ -25,7 +25,7 @@ fn it_parses_single_verb() {
 }
 #[test]
 fn it_parses_verb_and_item_or_subject() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let mut result = parse(&state, "take item2");
     let mut message_parts = HashMap::new();

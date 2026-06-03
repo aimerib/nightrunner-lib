@@ -28,7 +28,7 @@ static THEME_COLORS: [(&str, Color); 10] = [
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nr = NightRunnerBuilder::new()
         .with_path_for_config("./fixtures/")
-        .build();
+        .build()?;
     let intro_text = nr.game_intro();
     let first_room_text = nr.first_room_text()?.message;
     let mut siv = cursive::default();

@@ -164,37 +164,18 @@ impl Action {
 
 impl std::fmt::Display for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.is_valid() {
-            true => {
-                if self.verb.is_some() && self.item.is_some() && self.subject.is_some() {
-                    write!(
-                        f,
-                        "{} {} {}",
-                        self.verb.clone().unwrap(),
-                        self.item.clone().unwrap(),
-                        self.subject.clone().unwrap().name
-                    )
-                } else if self.verb.is_some() && self.subject.is_some() {
-                    write!(
-                        f,
-                        "{} {}",
-                        self.verb.clone().unwrap(),
-                        self.subject.clone().unwrap().name
-                    )
-                } else if self.verb.is_some() && self.item.is_some() {
-                    write!(
-                        f,
-                        "{} {}",
-                        self.verb.clone().unwrap(),
-                        self.item.clone().unwrap()
-                    )
-                } else if self.verb.is_some() {
-                    write!(f, "{}", self.verb.clone().unwrap())
-                } else {
-                    write!(f, "{}", self.movement.clone().unwrap())
-                }
+        if !self.is_valid() {
+            return write!(f, "Invalid action: {}", self.command_tokens.join(" "));
+        }
+        match (&self.verb, &self.item, &self.subject, &self.movement) {
+            (Some(verb), Some(item), Some(subject), _) => {
+                write!(f, "{} {} {}", verb, item, subject.name)
             }
-            false => write!(f, "Invalid action: {}", self.command_tokens.join(" ")),
+            (Some(verb), None, Some(subject), _) => write!(f, "{} {}", verb, subject.name),
+            (Some(verb), Some(item), None, _) => write!(f, "{} {}", verb, item),
+            (Some(verb), None, None, _) => write!(f, "{}", verb),
+            (None, _, _, Some(movement)) => write!(f, "{}", movement),
+            _ => write!(f, "Invalid action: {}", self.command_tokens.join(" ")),
         }
     }
 }
@@ -240,35 +221,27 @@ fn extract_item(state: &State, command_tokens: &[String], input: &str) -> Option
         .config
         .items
         .iter()
-        .map(|item| &item.name[..])
-        .collect::<Vec<&str>>()
+        .map(|item| regex::escape(&item.name))
+        .collect::<Vec<String>>()
         .join("|");
     let items_regex_match = format!("({})", items_string);
-    let re = Regex::new(&items_regex_match[..]).unwrap();
+    let re = Regex::new(&items_regex_match)
+        .expect("item names are regex-escaped, so the pattern is always valid");
 
-    let item = if command_tokens.len() > 1 && !subjects.iter().any(|s| s.name == command_tokens[1])
-    {
-        if let Some(capture) = re.captures(input) {
-            match capture.get(1) {
-                Some(_) => {
-                    let item = state
-                        .config
-                        .items
-                        .iter()
-                        .find(|item| item.name == *capture.get(1).unwrap().as_str())
-                        .unwrap()
-                        .to_owned();
-                    Some(item)
-                }
-                None => None,
-            }
-        } else {
-            None
-        }
+    if command_tokens.len() > 1 && !subjects.iter().any(|s| s.name == command_tokens[1]) {
+        re.captures(input)
+            .and_then(|capture| capture.get(1))
+            .and_then(|matched| {
+                state
+                    .config
+                    .items
+                    .iter()
+                    .find(|item| item.name == matched.as_str())
+                    .cloned()
+            })
     } else {
         None
-    };
-    item
+    }
 }
 
 fn extract_subject(state: &State, command_tokens: &[String]) -> Option<Subject> {

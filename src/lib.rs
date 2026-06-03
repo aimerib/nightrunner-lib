@@ -19,7 +19,7 @@
 //! use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 //! use nightrunner_lib::util::test_helpers::mock_json_data;
 //! let data = mock_json_data();
-//! let mut nr = NightRunnerBuilder::new().with_json_data(&data).build();
+//! let mut nr = NightRunnerBuilder::new().with_json_data(&data).build().unwrap();
 //! let result = nr.parse_input("look");
 //! let json_result = nr.json_parse_input("look");
 //! assert!(result.is_ok());
@@ -138,6 +138,18 @@ pub struct NightRunner {
     future_states: Vec<State>,
 }
 
+/// Describes where the game configuration should be
+/// loaded from. The actual parsing is deferred until
+/// [`NightRunnerBuilder::build`] so that any error in
+/// the configuration is surfaced from a single fallible
+/// call rather than panicking while building.
+#[derive(Debug, PartialEq, Eq)]
+enum ConfigSource {
+    Default,
+    Path(String),
+    Json(String),
+}
+
 /// You can use this to build a NightRunner
 /// strut. While you can build the NightRunner
 /// struct directly, using this builder is a
@@ -152,42 +164,45 @@ pub struct NightRunner {
 /// let nr1 = NightRunnerBuilder::new().with_json_data(&data);
 /// let nr2 = NightRunnerBuilder::new().with_path_for_config(path_to_yaml);
 /// ```
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct NightRunnerBuilder {
-    config: Config,
+    source: ConfigSource,
 }
 impl NightRunnerBuilder {
     /// Creates a new empty NightRunnerBuilder
     /// which contains an empty Config struct.
     pub fn new() -> NightRunnerBuilder {
         NightRunnerBuilder {
-            config: Config::default(),
+            source: ConfigSource::Default,
         }
     }
     /// Creates a new NightRunnerBuilder with YAML
     /// data from files in the specified path.
     pub fn with_path_for_config(mut self, path: &str) -> NightRunnerBuilder {
-        let config = Config::from_path(path);
-        self.config = config;
+        self.source = ConfigSource::Path(path.to_string());
         self
     }
     /// Creates a new NightRunnerBuilder with JSON
     /// data serialized to a string. This data should
     /// contain the configuration for the whole game.
     pub fn with_json_data(mut self, data: &str) -> NightRunnerBuilder {
-        self.config = Config::from_json(data);
+        self.source = ConfigSource::Json(data.to_string());
         self
     }
     /// Creates a new NightRunner struct. This will fail
     /// if the config is invalid or missing.
-    pub fn build(self) -> NightRunner {
-        let state = State::init(self.config);
-        NightRunner {
+    pub fn build(self) -> NRResult<NightRunner> {
+        let config = match self.source {
+            ConfigSource::Default => Config::default(),
+            ConfigSource::Path(path) => Config::from_path(&path)?,
+            ConfigSource::Json(data) => Config::from_json(&data)?,
+        };
+        let state = State::init(config);
+        Ok(NightRunner {
             state,
             previous_states: vec![],
             future_states: vec![],
-        }
+        })
     }
 }
 
@@ -226,12 +241,14 @@ impl NightRunner {
             Ok((new_state, ok)) => {
                 self.previous_states.push(self.state.clone());
                 self.state = new_state;
-                serde_json::to_string(&ok).unwrap()
+                serde_json::to_string(&ok)
+                    .unwrap_or_else(|_| r#"{"error":"failed to serialize result"}"#.to_string())
             }
-            Err(err) => format!(
-                "{{\"error\":{}}}",
-                serde_json::to_string(&err.to_string()).unwrap()
-            ),
+            Err(err) => {
+                let message = serde_json::to_string(&err.to_string())
+                    .unwrap_or_else(|_| "\"an unknown error occurred\"".to_string());
+                format!("{{\"error\":{}}}", message)
+            }
         }
     }
     /// Rewinds the game state to the previous state.
@@ -273,14 +290,19 @@ impl NightRunner {
     /// Since there is no input to parse when the game starts,
     /// this function should be used to retrieve that text instead.
     pub fn first_room_text(&self) -> NRResult<EventMessage> {
-        let narrative_id = self.state.rooms[0].narrative;
+        let narrative_id = self
+            .state
+            .rooms
+            .first()
+            .ok_or(parser::errors::NoRoom)?
+            .narrative;
         let narrative_text = self
             .state
             .config
             .narratives
             .iter()
             .find(|n| n.id == narrative_id)
-            .unwrap()
+            .ok_or(parser::errors::InvalidNarrative)?
             .text
             .clone();
         let event_message = parse_room_text(&self.state, narrative_text, "".to_string(), None)?;
@@ -342,15 +364,15 @@ impl NightRunner {
     ///
     /// config should be a JSON string.
     #[wasm_bindgen(constructor)]
-    pub fn new(config: &str) -> NightRunner {
+    pub fn new(config: &str) -> Result<NightRunner, JsError> {
         console_error_panic_hook::set_once();
-        let config = Config::from_json(config);
+        let config = Config::from_json(config).map_err(|e| JsError::new(&e.to_string()))?;
         let state = State::init(config);
-        NightRunner {
+        Ok(NightRunner {
             state,
             previous_states: vec![],
             future_states: vec![],
-        }
+        })
     }
     /// This is the main function that executes the game. Pass
     /// the input string to this function and it will return
@@ -428,18 +450,23 @@ impl NightRunner {
     /// Since there is no input to parse when the game starts,
     /// this function should be used to retrieve that text instead.
     pub fn first_room_text(&self) -> Result<JsValue, JsError> {
-        let narrative_id = self.state.rooms[0].narrative.clone();
+        let narrative_id = self
+            .state
+            .rooms
+            .first()
+            .ok_or_else(|| JsError::new("There are no rooms in the game."))?
+            .narrative;
         let narrative_text = self
             .state
             .config
             .narratives
             .iter()
             .find(|n| n.id == narrative_id)
-            .unwrap()
+            .ok_or_else(|| JsError::new(&parser::errors::InvalidNarrative.to_string()))?
             .text
             .clone();
-        let event_message =
-            parse_room_text(&self.state, narrative_text, "".to_string(), None).unwrap();
+        let event_message = parse_room_text(&self.state, narrative_text, "".to_string(), None)
+            .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(serde_wasm_bindgen::to_value(&event_message)?)
     }
 }

@@ -28,7 +28,7 @@ to YAML files containing the configuration for the game to
 use nightrunner_lib::NightRunner;
 use nightrunner_lib::NightRunnerBuilder;
 use nightrunner_lib::parser::interpreter::{ParsingResult};
-let mut nr = NightRunnerBuilder::new().with_path("/game_config/").build();
+let mut nr = NightRunnerBuilder::new().with_path_for_config("/game_config/").build().unwrap();
 let result = nr.parse_input("look");
 let json_result = nr.json_parse_input("look");
 assert!(result.is_ok());

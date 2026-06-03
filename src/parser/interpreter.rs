@@ -297,7 +297,7 @@ fn process_event(
 
     if event.remove_old_narrative {
         if let Some(narrative_after) = event.narrative_after {
-            new_state.set_narrative(narrative_after);
+            new_state.set_narrative(narrative_after)?;
         }
     }
 
@@ -369,14 +369,14 @@ fn return_formated_message(
             .rooms
             .iter()
             .find(|room| room.id == state.current_room)
-            .unwrap()
+            .ok_or(NoRoom)?
             .narrative;
         let room_narrative = state
             .config
             .narratives
             .iter()
             .find(|r_narrative| r_narrative.id == room_narrative_id)
-            .unwrap();
+            .ok_or(InvalidNarrative)?;
         room_narrative.text.clone() + "\n\n" + event_narrative.text.as_str()
     };
 
@@ -414,12 +414,11 @@ fn show_inventory(state: &State) -> NRResult<ParsingResult> {
         .iter()
         .map(|item| {
             let mut item_name = item.name.clone();
-            let first_char = &item_name.to_lowercase().chars().next().unwrap();
-            if ['a', 'e', 'i', 'o', 'u'].contains(first_char) {
-                item_name.insert_str(0, "an ");
-            } else {
-                item_name.insert_str(0, "a ");
-            }
+            let article = match item.name.to_lowercase().chars().next() {
+                Some('a' | 'e' | 'i' | 'o' | 'u') => "an ",
+                _ => "a ",
+            };
+            item_name.insert_str(0, article);
             item_name
         })
         .collect();
@@ -525,13 +524,9 @@ fn look_room(state: &State) -> NRResult<ParsingResult> {
             items
                 .iter()
                 .clone()
-                .map(|item| {
-                    let first_char = &item.name.to_lowercase().chars().next().unwrap();
-                    if ['a', 'e', 'i', 'o', 'u'].contains(first_char) {
-                        format!("an {}", item.name)
-                    } else {
-                        format!("a {}", &item)
-                    }
+                .map(|item| match item.name.to_lowercase().chars().next() {
+                    Some('a' | 'e' | 'i' | 'o' | 'u') => format!("an {}", item.name),
+                    _ => format!("a {}", &item),
                 })
                 .collect::<Vec<String>>()
                 .join("\n")

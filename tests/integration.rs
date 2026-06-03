@@ -10,7 +10,7 @@ use std::collections::HashMap;
 fn it_works_with_path_to_configs() {
     let mut nr = NightRunnerBuilder::new()
         .with_path_for_config("fixtures/")
-        .build();
+        .build().unwrap();
 
     let result = nr.parse_input("look");
     assert_eq!(
@@ -31,7 +31,7 @@ fn it_works_with_path_to_configs() {
 fn it_works_with_json_data() {
     use nightrunner_lib::parser::interpreter::EventMessage;
     let data = nightrunner_lib::util::test_helpers::mock_json_data();
-    let mut nr = NightRunnerBuilder::new().with_json_data(&data).build();
+    let mut nr = NightRunnerBuilder::new().with_json_data(&data).build().unwrap();
     let mut message_parts = HashMap::new();
 
     message_parts.insert(

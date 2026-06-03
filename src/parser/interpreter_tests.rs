@@ -4,7 +4,7 @@ use crate::config::{Config, Verb};
 use pretty_assertions::assert_eq;
 #[test]
 fn it_looks_at_room() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let mut state = State::init(config);
     let look_result1 = look_room(&state);
     state.current_room = 7;
@@ -21,7 +21,7 @@ fn it_looks_at_room() {
 }
 #[test]
 fn it_looks_at_subject() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let subject1 = state.config.subjects[0].clone();
     let subject2 = Subject {
@@ -44,7 +44,7 @@ fn it_looks_at_subject() {
 }
 #[test]
 fn it_looks_at_item() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let item1 = state.config.items[0].clone();
     let item2 = Item {
@@ -69,7 +69,7 @@ fn it_looks_at_item() {
 
 #[test]
 fn it_picks_items() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let current_room_id = state.current_room;
     let current_room = state
@@ -107,7 +107,7 @@ fn it_picks_items() {
 
 #[test]
 fn it_drops_items() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let mut state = State::init(config);
     let current_room_id = &state.current_room;
     let current_room = &state
@@ -138,7 +138,7 @@ fn it_drops_items() {
 
 #[test]
 fn it_shows_inventory() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let mut state = State::init(config);
 
     let inventory_result_1 = show_inventory(&state);
@@ -172,7 +172,7 @@ fn it_shows_inventory() {
 
 #[test]
 fn it_extracts_item_and_subject() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let mut state = State::init(config);
     let subject = Subject {
         id: 1,
@@ -240,7 +240,7 @@ fn it_extracts_item_and_subject() {
 
 #[test]
 fn it_handles_movement() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let (new_state, movement_result1) = handle_movement(&state, Some(Directions::South)).unwrap();
     let movement_result2 = handle_movement(&new_state, Some(Directions::South)).unwrap_err();
@@ -266,7 +266,7 @@ fn it_handles_movement() {
 
 #[test]
 fn it_handles_verbs() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action_north = Action::parse(&state, "north");
     let action_look = Action::parse(&state, "look");
@@ -298,7 +298,7 @@ fn it_handles_verbs() {
 
 #[test]
 fn it_handles_verb_items() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action_look_item = Action::parse(&state, "look item1");
     let action_pick_item = Action::parse(&state, "pick item2");
@@ -342,7 +342,7 @@ fn it_handles_verb_items() {
 
 #[test]
 fn it_handles_verb_subjects() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
 
     let action_talk_subject = Action::parse(&state, "talk item1");
@@ -386,7 +386,7 @@ fn it_handles_verb_subjects() {
 
 #[test]
 fn it_handles_events() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action_talk_subject = Action::parse(&state, "talk subject1");
     let action_give_subject = Action::parse(&state, "give subject1");
@@ -590,7 +590,7 @@ fn it_handles_events() {
 
 #[test]
 fn it_process_action() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action_talk_subject = Action::parse(&state, "talk subject1");
     let action_give_subject = Action::parse(&state, "give subject1");

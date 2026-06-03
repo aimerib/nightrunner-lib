@@ -8,7 +8,7 @@ fn it_returns_valid_response() {
     use nightrunner_lib::JsMessage;
     use nightrunner_lib::NightRunner;
     let data = mock_json_data();
-    let mut nr = NightRunner::new(&data);
+    let mut nr = NightRunner::new(&data).unwrap();
 
     let result = nr.parse("look");
     assert!(result.is_ok());

@@ -5,21 +5,21 @@ use pretty_assertions::assert_eq;
 use super::*;
 #[test]
 fn it_extracts_input_verb() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let verb = extract_verb(&state, &["look".to_string()]);
     assert_eq!(verb.unwrap().names[0], "look");
 }
 #[test]
 fn it_extracts_input_subject() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let subject = extract_subject(&state, &["look".to_string(), "subject1".to_string()]);
     assert_eq!(subject.unwrap().name, "subject1");
 }
 #[test]
 fn it_extracts_input_movement() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let movement1 = extract_movement(&state, &["go".to_string(), "north".to_string()]);
     let movement2 = extract_movement(&state, &["south".to_string()]);
@@ -28,7 +28,7 @@ fn it_extracts_input_movement() {
 }
 #[test]
 fn it_extracts_input_item() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let item1 = extract_item(
         &state,
@@ -45,7 +45,7 @@ fn it_extracts_input_item() {
 }
 #[test]
 fn parse_action_fn_parses_correctly() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action1 = parse_action(
         &state,
@@ -74,7 +74,7 @@ fn parse_action_fn_parses_correctly() {
 }
 #[test]
 fn it_parses_action() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let action = Action::parse(&state, "take item1");
     assert!(action.is_valid());

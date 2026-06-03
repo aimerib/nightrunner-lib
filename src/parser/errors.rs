@@ -41,7 +41,7 @@ impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for RequiredEvent
 /// use nightrunner_lib::{NightRunner, NightRunnerBuilder, ParsingResult};
 /// use nightrunner_lib::parser::errors::InvalidEvent;
 /// use nightrunner_lib::parser::{action::Action};
-/// let mut nr = NightRunnerBuilder::new().with_path_for_config("fixtures/").build();
+/// let mut nr = NightRunnerBuilder::new().with_path_for_config("fixtures/").build().unwrap();
 /// let mut result = nr.parse_input("give item2 to subject2");
 /// let json_result = nr.json_parse_input("give item2 to subject2");
 /// let json_value: serde_json::Value = serde_json::from_str(&json_result).unwrap();

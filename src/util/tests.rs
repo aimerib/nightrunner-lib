@@ -11,7 +11,7 @@ use pretty_assertions::assert_eq;
 
 #[test]
 fn player_takes_item() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let item = state.config.items[0].clone();
     let item_not_in_room = Item {
@@ -30,7 +30,7 @@ fn player_takes_item() {
 }
 #[test]
 fn player_receives_item() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let item = state.config.items[0].clone();
     let item_not_in_room = Item {
@@ -46,7 +46,7 @@ fn player_receives_item() {
 }
 #[test]
 fn it_removes_player_item() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let item = state.config.items[0].clone();
     let (new_state, _) = player_receive_item(&state, item.clone()).unwrap();
@@ -63,7 +63,7 @@ fn it_removes_player_item() {
 }
 #[test]
 fn it_moves_player() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let result1 = move_to_direction(&state, Directions::North).unwrap_err();
     let (new_state, result2) = move_to_direction(&state, Directions::South).unwrap();
@@ -77,7 +77,7 @@ fn it_moves_player() {
 #[test]
 fn it_parses_templated_narratives() {
     let re = Regex::new(r"\{(.*?)\}").unwrap();
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let state = State::init(config);
     let room = state
         .rooms
@@ -143,7 +143,7 @@ fn it_parses_templated_narratives() {
 
 #[test]
 fn it_parses_room_text() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let mut state = State::init(config);
     let narrative_text = String::from(
         "this is a templated which exists in the game {item1}.\n\nthis is a templated subject that exists in the game {subject1}.",

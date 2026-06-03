@@ -102,7 +102,9 @@ impl std::fmt::Display for Verb {
             VerbFunction::Inventory => write!(f, "inventory"),
             VerbFunction::Quit => write!(f, "quit"),
             VerbFunction::Talk => write!(f, "talk"),
-            VerbFunction::Normal => write!(f, "{}", self.names[0]),
+            VerbFunction::Normal => {
+                write!(f, "{}", self.names.first().map(String::as_str).unwrap_or(""))
+            }
         }
     }
 }
@@ -459,7 +461,7 @@ impl Config {
     /// ```rust
     /// # use nightrunner_lib::config::Config;
     /// # let data = nightrunner_lib::util::test_helpers::mock_json_data();
-    /// let config = Config::from_json(&data);
+    /// let config = Config::from_json(&data).unwrap();
     /// ```
     ///
     /// Example valid JSON:
@@ -690,8 +692,8 @@ impl Config {
     ///   ]
     /// }"#;
     /// ```
-    pub fn from_json(data: &str) -> Config {
-        let config_data: ConfigData = serde_json::from_str(data).unwrap();
+    pub fn from_json(data: &str) -> NRResult<Config> {
+        let config_data: ConfigData = serde_json::from_str(data)?;
         let mut items = config_data.items;
         let mut verbs = config_data.allowed_verbs;
         let mut subjects = config_data.subjects;
@@ -706,7 +708,7 @@ impl Config {
         subjects.sort();
         narratives.sort();
 
-        Config {
+        Ok(Config {
             allowed_verbs: verbs,
             allowed_prepositions: AllowedPrepositions::init(),
             allowed_determiners: AllowedDeterminers::init(),
@@ -718,7 +720,7 @@ impl Config {
             events,
             intro: config_data.intro,
             room_blueprints,
-        }
+        })
     }
     /// # Config::init_yaml
     /// Load config files from yaml files.
@@ -742,50 +744,45 @@ impl Config {
     /// ## Example:
     /// ```rust
     /// # use nightrunner_lib::config::Config;
-    /// let config = Config::from_path("./fixtures/");
+    /// let config = Config::from_path("./fixtures/").unwrap();
     /// ```
     ///
     /// For examples of valid yaml files see the
     /// fixtures directory used for unit tests.
-    pub fn from_path(path: &str) -> Config {
-        let error_message = format!("Could not find config file at {}", path);
-        let narratives_config =
-            std::fs::read_to_string(format!("{}narratives.yml", path)).expect(&error_message);
-        let items_config =
-            std::fs::read_to_string(format!("{}items.yml", path)).expect(&error_message);
-        let rooms_config =
-            std::fs::read_to_string(format!("{}rooms.yml", path)).expect(&error_message);
-        let allowed_verbs_config =
-            std::fs::read_to_string(format!("{}verbs.yml", path)).expect(&error_message);
-        let subjects_config =
-            std::fs::read_to_string(format!("{}subjects.yml", path)).expect(&error_message);
-        let events_config =
-            std::fs::read_to_string(format!("{}events.yml", path)).expect(&error_message);
-        let intro_config =
-            std::fs::read_to_string(format!("{}intro.yml", path)).expect(&error_message);
+    pub fn from_path(path: &str) -> NRResult<Config> {
+        let read = |file: &str| -> NRResult<String> {
+            std::fs::read_to_string(format!("{}{}", path, file))
+                .map_err(|e| format!("Could not read config file {}{}: {}", path, file, e).into())
+        };
+        let narratives_config = read("narratives.yml")?;
+        let items_config = read("items.yml")?;
+        let rooms_config = read("rooms.yml")?;
+        let allowed_verbs_config = read("verbs.yml")?;
+        let subjects_config = read("subjects.yml")?;
+        let events_config = read("events.yml")?;
+        let intro_config = read("intro.yml")?;
 
-        let mut narratives: Vec<Narrative> = serde_yaml::from_str(&narratives_config[..]).unwrap();
+        let mut narratives: Vec<Narrative> = serde_yaml::from_str(&narratives_config)?;
         narratives.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut items: Vec<Item> = serde_yaml::from_str(&items_config[..]).unwrap();
+        let mut items: Vec<Item> = serde_yaml::from_str(&items_config)?;
         items.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut room_blueprints: Vec<RoomBlueprint> =
-            serde_yaml::from_str(&rooms_config[..]).unwrap();
+        let mut room_blueprints: Vec<RoomBlueprint> = serde_yaml::from_str(&rooms_config)?;
         room_blueprints.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut events: Vec<Event> = serde_yaml::from_str(&events_config[..]).unwrap();
+        let mut events: Vec<Event> = serde_yaml::from_str(&events_config)?;
         events.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut subjects: Vec<Subject> = serde_yaml::from_str(&subjects_config[..]).unwrap();
+        let mut subjects: Vec<Subject> = serde_yaml::from_str(&subjects_config)?;
         subjects.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let mut verbs: Vec<Verb> = serde_yaml::from_str(&allowed_verbs_config[..]).unwrap();
+        let mut verbs: Vec<Verb> = serde_yaml::from_str(&allowed_verbs_config)?;
         verbs.sort_by(|a, b| a.id.cmp(&b.id));
 
-        let intro: String = serde_yaml::from_str(&intro_config[..]).unwrap();
+        let intro: String = serde_yaml::from_str(&intro_config)?;
 
-        Config {
+        Ok(Config {
             allowed_determiners: AllowedDeterminers::init(),
             allowed_prepositions: AllowedPrepositions::init(),
             allowed_movements: AllowedMovements::init(),
@@ -797,7 +794,7 @@ impl Config {
             events,
             intro,
             room_blueprints,
-        }
+        })
     }
 }
 
@@ -833,10 +830,10 @@ impl State {
     /// # use nightrunner_lib::util::test_helpers::mock_json_data;
     /// # let json_data = mock_json_data();
     /// // Using yaml config files from a path
-    /// let config1 = Config::from_path("./fixtures/");
+    /// let config1 = Config::from_path("./fixtures/").unwrap();
     /// let state1 = State::init(config1);
     /// // or using JSON data from a front-end
-    /// let config2 = Config::from_json(&json_data);
+    /// let config2 = Config::from_json(&json_data).unwrap();
     /// let state2 = State::init(config2);
     /// ```
     pub fn init(config: Config) -> Self {
@@ -918,23 +915,24 @@ impl State {
             .rooms
             .iter()
             .find(|r| r.id == self.current_room)
-            .unwrap();
+            .expect("current room should always exist in the state");
         let narrative = self
             .config
             .narratives
             .iter()
             .find(|n| n.id == room.narrative)
-            .unwrap();
+            .expect("the current room's narrative should always exist in the config");
         narrative.clone()
     }
     /// Sets the current room's narrative
-    pub fn set_narrative(&mut self, narrative_id: u16) {
+    pub fn set_narrative(&mut self, narrative_id: u16) -> NRResult<()> {
         let room = self
             .rooms
             .iter_mut()
             .find(|r| r.id == self.current_room)
-            .unwrap();
+            .ok_or(InvalidRoom)?;
         room.narrative = narrative_id;
+        Ok(())
     }
     /// Checks if an event is completed.
     pub fn is_event_completed(&self, event_id: u16) -> bool {

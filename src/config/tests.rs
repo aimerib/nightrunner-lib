@@ -161,16 +161,16 @@ fn it_creates_events() {
 }
 #[test]
 fn it_creates_config_from_default_builder() {
-    let config = Config::from_path("fixtures/");
+    let config = Config::from_path("fixtures/").unwrap();
     let config_object = mock_config();
     assert_eq!(config_object, config);
 }
 #[test]
 fn it_creates_state() {
-    let config = Config::from_json(&test_helpers::mock_json_data());
+    let config = Config::from_json(&test_helpers::mock_json_data()).unwrap();
 
     let state = State::init(config);
-    let state2 = State::init(Config::from_path("fixtures/"));
+    let state2 = State::init(Config::from_path("fixtures/").unwrap());
     let state_object = mock_state();
     assert_eq!(state, state2, "state and state2 should be the same");
     assert_eq!(
