@@ -103,7 +103,11 @@ impl std::fmt::Display for Verb {
             VerbFunction::Quit => write!(f, "quit"),
             VerbFunction::Talk => write!(f, "talk"),
             VerbFunction::Normal => {
-                write!(f, "{}", self.names.first().map(String::as_str).unwrap_or(""))
+                write!(
+                    f,
+                    "{}",
+                    self.names.first().map(String::as_str).unwrap_or("")
+                )
             }
         }
     }
