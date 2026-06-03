@@ -359,7 +359,7 @@ fn return_formated_message(
         .config
         .narratives
         .iter()
-        .find(|narrative| event.narrative.map_or(false, |id| narrative.id == id))
+        .find(|narrative| event.narrative == Some(narrative.id))
         .ok_or(InvalidNarrative)?;
 
     let room_text = if event.remove_old_narrative {

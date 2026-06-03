@@ -30,8 +30,8 @@ impl std::fmt::Display for RequiredEventNotCompleted {
 }
 
 impl error::Error for RequiredEventNotCompleted {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for RequiredEventNotCompleted {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for RequiredEventNotCompleted {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         RequiredEventNotCompleted
     }
 }
@@ -92,8 +92,8 @@ impl std::fmt::Display for InvalidEvent {
 }
 
 impl error::Error for InvalidEvent {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidEvent {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidEvent {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidEvent
     }
 }
@@ -108,8 +108,8 @@ impl std::fmt::Display for InvalidAction {
 }
 
 impl error::Error for InvalidAction {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidAction {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidAction {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidAction
     }
 }
@@ -127,8 +127,8 @@ impl std::fmt::Display for InvalidItem {
 }
 
 impl error::Error for InvalidItem {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidItem {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidItem {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidItem
     }
 }
@@ -146,8 +146,8 @@ impl std::fmt::Display for InvalidSubject {
 }
 
 impl error::Error for InvalidSubject {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidSubject {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidSubject {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidSubject
     }
 }
@@ -165,8 +165,8 @@ impl std::fmt::Display for InvalidVerb {
 }
 
 impl error::Error for InvalidVerb {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidVerb {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidVerb {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidVerb
     }
 }
@@ -184,8 +184,8 @@ impl std::fmt::Display for InvalidMovement {
 }
 
 impl error::Error for InvalidMovement {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidMovement {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidMovement {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidMovement
     }
 }
@@ -203,8 +203,8 @@ impl std::fmt::Display for InvalidDirection {
 }
 
 impl error::Error for InvalidDirection {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidDirection {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidDirection {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidDirection
     }
 }
@@ -222,8 +222,8 @@ impl std::fmt::Display for InvalidRoom {
 }
 
 impl error::Error for InvalidRoom {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidRoom {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidRoom {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidRoom
     }
 }
@@ -239,8 +239,8 @@ impl std::fmt::Display for InvalidVerbItemSubject {
 }
 
 impl error::Error for InvalidVerbItemSubject {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidVerbItemSubject {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidVerbItemSubject {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidVerbItemSubject
     }
 }
@@ -256,8 +256,8 @@ impl std::fmt::Display for InvalidVerbSubject {
 }
 
 impl error::Error for InvalidVerbSubject {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidVerbSubject {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidVerbSubject {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidVerbSubject
     }
 }
@@ -273,8 +273,8 @@ impl std::fmt::Display for InvalidVerbItem {
 }
 
 impl error::Error for InvalidVerbItem {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidVerbItem {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidVerbItem {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidVerbItem
     }
 }
@@ -290,8 +290,8 @@ impl std::fmt::Display for ParsingRoomText {
 }
 
 impl error::Error for ParsingRoomText {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for ParsingRoomText {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for ParsingRoomText {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         ParsingRoomText
     }
 }
@@ -307,8 +307,8 @@ impl std::fmt::Display for NoRoom {
 }
 
 impl error::Error for NoRoom {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for NoRoom {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for NoRoom {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         NoRoom
     }
 }
@@ -324,8 +324,8 @@ impl std::fmt::Display for CantPick {
 }
 
 impl error::Error for CantPick {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for CantPick {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for CantPick {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         CantPick
     }
 }
@@ -341,8 +341,8 @@ impl std::fmt::Display for NoItem {
 }
 
 impl error::Error for NoItem {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for NoItem {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for NoItem {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         NoItem
     }
 }
@@ -358,8 +358,8 @@ impl std::fmt::Display for ItemNotFound {
 }
 
 impl error::Error for ItemNotFound {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for ItemNotFound {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for ItemNotFound {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         ItemNotFound
     }
 }
@@ -376,8 +376,8 @@ impl std::fmt::Display for EmptyInput {
 }
 
 impl error::Error for EmptyInput {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for EmptyInput {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for EmptyInput {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         EmptyInput
     }
 }
@@ -395,8 +395,8 @@ impl std::fmt::Display for InvalidNarrative {
 }
 
 impl error::Error for InvalidNarrative {}
-impl From<&std::boxed::Box<(dyn std::error::Error + 'static)>> for InvalidNarrative {
-    fn from(_: &std::boxed::Box<(dyn std::error::Error + 'static)>) -> Self {
+impl From<&std::boxed::Box<dyn std::error::Error + 'static>> for InvalidNarrative {
+    fn from(_: &std::boxed::Box<dyn std::error::Error + 'static>) -> Self {
         InvalidNarrative
     }
 }

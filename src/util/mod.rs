@@ -139,10 +139,9 @@ pub fn player_remove_item(state: &State, item: Item) -> NRResult<(State, String)
     ))
 }
 
+/// Represents a successful movement.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-
-/// Represents a successful movement.
 pub struct MoveSuccess;
 
 impl Display for MoveSuccess {

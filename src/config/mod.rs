@@ -459,7 +459,7 @@ impl Config {
     /// This is useful for web frontends
     /// Arguments:
     /// * `data` - serialized JSON to be used
-    /// for the game configuration.
+    ///   for the game configuration.
     ///
     /// ## Example:
     /// ```rust
@@ -705,8 +705,8 @@ impl Config {
         let mut events = config_data.events;
         let mut room_blueprints = config_data.room_blueprints;
 
-        room_blueprints.sort_by(|a, b| a.id.cmp(&b.id));
-        events.sort_by(|a, b| a.id.cmp(&b.id));
+        room_blueprints.sort_by_key(|a| a.id);
+        events.sort_by_key(|a| a.id);
         verbs.sort();
         items.sort();
         subjects.sort();
@@ -767,22 +767,22 @@ impl Config {
         let intro_config = read("intro.yml")?;
 
         let mut narratives: Vec<Narrative> = serde_yaml::from_str(&narratives_config)?;
-        narratives.sort_by(|a, b| a.id.cmp(&b.id));
+        narratives.sort_by_key(|a| a.id);
 
         let mut items: Vec<Item> = serde_yaml::from_str(&items_config)?;
-        items.sort_by(|a, b| a.id.cmp(&b.id));
+        items.sort_by_key(|a| a.id);
 
         let mut room_blueprints: Vec<RoomBlueprint> = serde_yaml::from_str(&rooms_config)?;
-        room_blueprints.sort_by(|a, b| a.id.cmp(&b.id));
+        room_blueprints.sort_by_key(|a| a.id);
 
         let mut events: Vec<Event> = serde_yaml::from_str(&events_config)?;
-        events.sort_by(|a, b| a.id.cmp(&b.id));
+        events.sort_by_key(|a| a.id);
 
         let mut subjects: Vec<Subject> = serde_yaml::from_str(&subjects_config)?;
-        subjects.sort_by(|a, b| a.id.cmp(&b.id));
+        subjects.sort_by_key(|a| a.id);
 
         let mut verbs: Vec<Verb> = serde_yaml::from_str(&allowed_verbs_config)?;
-        verbs.sort_by(|a, b| a.id.cmp(&b.id));
+        verbs.sort_by_key(|a| a.id);
 
         let intro: String = serde_yaml::from_str(&intro_config)?;
 
